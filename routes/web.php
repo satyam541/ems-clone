@@ -1,0 +1,298 @@
+<?php
+
+/*
+|--------------------------------------------------------------------------
+| Web Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register web routes for your application. These
+| routes are loaded by the RouteServiceProvider within a group which
+| contains the "web" middleware group. Now create something great!
+|
+*/
+
+use App\User;
+use Illuminate\Support\Facades\Route;
+
+// Route::get('/', function () {
+//     return view('welcome');
+// });
+
+    \Debugbar::disable();
+
+
+    Route::get('/', 'DashboardController@index')->name('dashboard');
+    Route::get('/dashboard', 'DashboardController@index');
+
+    // user Routes
+    Route::prefix('user')->group(function () {
+        Route::get('/','UserController@view')->name('userView');
+        Route::get('/update/{user}','UserController@editUser')->name('editUser');
+        Route::post('/update/{user}','UserController@updateUser')->name('updateUser');
+    });
+
+    //Role routes
+    Route::prefix('role')->group(function () {
+        Route::post('/assign','UserController@assignRoles')->name('assignRole');
+        Route::get('/','AuthorizeController@roleView')->name('roleView');
+        Route::get('/insert','AuthorizeController@createRole')->name('createRole');
+        Route::get('/update/{role}','AuthorizeController@editRole')->name('editRole');
+    });
+
+    //Permission routes
+    Route::prefix('permission')->group(function () {
+        Route::get('/','AuthorizeController@permissionView')->name('permissionView');
+        Route::get('/assign/{role}','AuthorizeController@editRolePermission')->name('editRolePermission');
+        Route::post('/assign/{role}','AuthorizeController@updateRolePermission')->name('updateRolePermission');
+    });
+    // deaprtment routes
+    Route::get('/department-view','DepartmentController@view')->name('departmentView');
+
+    Route::resource('/designation', 'DesignationController');
+    
+    //qualification route
+    Route::get('/qualification','QualificationController@view')->name('qualificationView');
+
+    // hr routes
+    Route::group(['prefix'=>'hr','as'=>'hr.'], function(){
+        Route::get('/departments', 'DepartmentController@departmentEmployees')->name('departmentList');
+        Route::get('/admin/list', 'UserController@adminList')->name('adminList');
+        Route::get('/it-stocks','ItController@hrStockList')->name('stockList');
+        Route::get('/quotation','ItController@hrQuotationList')->name('quotationList');
+        Route::get('stock/details/{item_id}','ItController@hrStockDetailList')->name('stockDetailList');
+        Route::post('/department/update', 'DepartmentController@managerUpdate')->name('managerUpdate');
+    });
+    Route::prefix('hr-employee')->group(function(){
+        Route::get('/','EmployeeController@view')->name('employeeView');
+        Route::get('/create','EmployeeController@create')->name('createEmployee');
+        Route::get('/pending/profiles','EmployeeController@pendingEmployeeProfile')->name('pendingProfile');
+        Route::get('/profile/draft/{employee}', 'EmployeeController@draft_view')->name('draftView');
+        Route::post('/profile/draft', 'EmployeeController@draft_action')->name('draftAction');
+        Route::get('/download/{employee}/{reference}','EmployeeController@download_document')->name('downloadDocument');
+        Route::get('/profile/draft', 'EmployeeController@draft')->name('draftList');
+        Route::post('/insert','EmployeeController@insert')->name('insertEmployee');
+        Route::get('/update/{employee}','EmployeeController@edit')->name('editEmployee');
+        Route::post('/update','EmployeeController@update')->name('updateEmployee');
+        Route::get('/change-department','EmployeeController@updateDepartment')->name('updateEmployeeDepartment');
+        Route::post('/update/department','EmployeeController@changeDepartment')->name('changeDepartment');
+        Route::post('/assign/department','EmployeeController@assignDepartment')->name('assignDepartment');
+        Route::get('/exit', 'EmployeeController@exitList')->name('exitList');
+        Route::get('/exit/insert', 'EmployeeController@exitForm')->name('exitForm');
+        Route::post('/initiate/no-dues', 'EmployeeController@noDuesInitiate')->name('noDuesInitiate');
+        Route::post('/upload/experience', 'EmployeeController@uploadExperience')->name('uploadExperience');
+        Route::get('/forwarded/leaves','LeaveController@hrLeaveList')->name('forwardedLeaveList');
+        Route::get('/leaves','LeaveController@managerLeave')->name('hrLeaveList');
+        Route::get('/detailed/leaves-history','LeaveController@hrLeaveHistoryList')->name('hrLeaveHistory');
+        Route::get('/export','LeaveController@export')->name('exportLeave');
+    });
+    //employee routes
+    Route::prefix('employee')->group(function () {
+        Route::get('/view','DepartmentController@employee')->name('departmentEmployeeView');
+        Route::get('/profile/{employee}','EmployeeController@detail')->name('employeeDetail');
+        Route::get('/export','EmployeeController@export')->name('exportEmployee');
+        Route::post('/import','EmployeeController@import')->name('importEmployee');
+        Route::get('/no-dues/requests','EmployeeController@noDuesRequests')->name('noDuesRequests');
+        Route::post('/no-dues/submit/{employee}','EmployeeController@noDuesSubmit')->name('noDuesSubmit');
+
+        //edit routes
+        Route::prefix('edit')->group(function () {
+            Route::get('/profile/{employee}','EmployeeController@editProfile')->name('editProfile');
+            Route::post('/profile/{employee}','EmployeeController@updateProfile')->name('updateProfile');
+            Route::get('/document/{document}','EmployeeController@editDocument')->name('editDocument');
+            Route::post('/document','EmployeeController@updateDocument')->name('updateDocument');
+        });
+    });
+
+    // Ticket form
+    Route::get('/ticket/raise-form','TicketController@ticketRaiseForm')->name('ticketRaiseForm');
+    Route::post('/ticket/raise','TicketController@ticketRaise')->name('ticketRaise');
+    // Ticket list
+    Route::get('/my/tickets','TicketController@myTickets')->name('myTickets');
+
+    // log views
+    Route::get('laravel/logs', 'UserController@laravelLogs')->name('laravelLogs');
+
+    //Leave routes
+    Route::prefix('my-leave')->group(function () {
+        Route::get('/','LeaveController@leaveList')->name('leaveList');
+        Route::get('/apply','LeaveController@leaveForm')->name('createLeave');
+        Route::post('/insert','LeaveController@insert')->name('submitLeave');
+        Route::get('view/file','LeaveController@viewFile')->name('viewFile');
+        // new routes
+    });
+
+    Route::post('/alter','LeaveController@alterLeave')->name('leaveAlter');
+    Route::post('hr/leave-history/cancel','LeaveController@hrLeaveHistoryCancel')->name('hrLeaveHistoryCancel');
+    //Attendance Routes
+    Route::prefix('attendance')->group(function () {
+        // Route::get('/','AttendanceController@index')->name('attendanceUpload');
+        // Route::post('/import','AttendanceController@import')->name('importAttendance');
+        // Route::get('/view/{employee}','EmployeeController@employeeAttendance')->name('employeeAttendance');
+        // Route::get('/view','AttendanceController@view')->name('attendanceView');
+        // Route::get('/{employee}/{month}','AttendanceController@monthlyRecord')->name('attendanceRecord');
+
+        Route::get('/view','AttendanceController@list')->name('attendanceView');
+        Route::get('/form','AttendanceController@form')->name('attendanceForm');
+        Route::post('/form/submit/','AttendanceController@submitAttendance')->name('submitAttendance');
+        Route::get('/export','AttendanceController@export')->name('exportRemoteAttendance');
+    });
+
+    //Office Routes
+    Route::prefix('office')->group(function () {
+        Route::get('/email','EmployeeController@viewOfficeEmail')->name('officeEmailView');
+        Route::get('/email/list','EmployeeController@emailList')->name('officeEmailList');
+        Route::post('update/email','EmployeeController@updateofficeEmail')->name('updateOfficeEmail');
+    });
+    Route::get('alloted/office/email','EmployeeController@officeEmailAlloted')->name('AllotedOfficeEmail');
+
+    //job application form
+    Route::prefix('interviewee')->group(function () {
+        Route::get('/','IntervieweeController@viewInterviewee')->name('intervieweeView');
+        Route::get('/list','IntervieweeController@list')->name('intervieweeList');
+        Route::get('/response/saved',function(){
+            return view('error.responseSaved');
+        })->name('errorResponse');
+        Route::get('/detail/{interviewee}','IntervieweeController@detail')->name('intervieweeDetail');
+        Route::delete('/delete/{interviewee}','IntervieweeController@delete')->name('intervieweeDelete');
+        Route::get('/download/{resume}','IntervieweeController@downloadResume')->name('downloadResume');
+        Route::post('/update/detail','IntervieweeController@updateInterviewee')->name('updateInterviewee');
+        Route::get('/pending/list','IntervieweeController@pendingList')->name('intervieweePending');
+    });
+
+    // Offer Letter
+    Route::get('download/offer/letter/{offer_letter}','IntervieweeController@downloadOfferLetter')->name('downloadOfferLetter');
+
+    // Route::get('/hardware/export','HardwareDetailController@export')->name('exportHardwareList');
+
+    //equipment routes
+    Route::prefix('equipment')->group(function () {
+        Route::get('/list', 'EquipmentController@view')->name('equipmentView');
+        Route::get('/add', 'EquipmentController@addEquipment')->name('createEquipment');
+        Route::get('/edit/{equipment}', 'EquipmentController@editEquipment')->name('editEquipment');
+        Route::post('/insert','EquipmentController@insertEquipment')->name('insertEquipment');
+        Route::post('/update/{equipment}','EquipmentController@updateEquipment')->name('updateEquipment');
+        Route::get('/import', 'EquipmentController@importView')->name('equipmentImportView');
+        Route::post('/import', 'EquipmentController@import')->name('equipmentImport');
+        Route::get('/export','EquipmentController@export')->name('exportEquipment');
+        Route::get('/details/{entity}','EquipmentRequestController@equipmentDetails')->name('equipmentDetails');
+        Route::get('/request/view','EquipmentRequestController@view')->name('viewEntityRequest');
+        Route::get('/request/alot','EquipmentRequestController@requestEquipmentAlot')->name('alotEquipmentByRequest');
+        Route::post('/request/insert','EquipmentRequestController@insert')->name('insertEntityRequest');
+        Route::get('/request/{request_id?}','EquipmentRequestController@request')->name('requestEquipments');
+        Route::get('/request/view/all','EquipmentRequestController@viewAll')->name('allEntityRequest');
+    });
+    Route::get('/request/equipment','EquipmentRequestController@view')->name('requestEquipment');
+
+    // update password
+    Route::prefix('update')->group(function () {
+        Route::get('change/password','UserController@updatePasswordView')->name('changePassword');
+        Route::post('password','UserController@updatePassword')->name('updatePassword');
+    });
+
+    //Role routes
+    Route::get('/module','ModuleController@moduleView')->name('moduleView');
+
+    //activity log route
+    Route::get('/logs','ActivityController@view')->name('activityLogView');
+
+    //entity request routes
+    Route::prefix('entity')->group(function () {
+        Route::get('/list', 'EntityController@view')->name('entityView');
+    });
+
+    //manager routes
+    Route::prefix('manager')->group(function () {
+        Route::get('/employees','ManagerController@view')->name('managerEmployeeView');
+        Route::get('/department/equipment','ManagerController@views')->name('managerDepartmentEquipment');
+        Route::get('/attendance','ManagerController@attendance')->name('managerAttendanceView');
+        Route::get('/department/leave-request','LeaveController@managerLeaveList')->name('managerLeaveList');
+        Route::get('/department/leave-history','LeaveController@managerLeaveHistory')->name('managerLeaveHistory');
+
+    });
+
+    //trash routes
+    Route::prefix('trash')->group(function () {
+        Route::get('equipment/view','EquipmentController@viewTrash')->name('viewTrashEquipment');
+        Route::get('department/view','DepartmentController@viewTrash')->name('viewTrashDepartment');
+        Route::get('role/view','AuthorizeController@viewTrashRole')->name('viewTrashRole');
+        Route::get('permission/view','AuthorizeController@viewTrashPermission')->name('viewTrashPermission');
+        Route::get('employee/view','EmployeeController@viewTrash')->name('viewTrashEmployee');
+        Route::get('module/view','ModuleController@viewTrash')->name('viewTrashModule');
+    });
+    Route::get('/clear-cache',function()
+    {
+        if(in_array(strtolower(auth()->user()->email), User::$developers))
+        {
+            \Artisan::call('cache:clear');
+            \Artisan::call('config:clear');
+            \Artisan::call('view:clear');
+            echo "cleared";
+        }
+        else{
+            abort(404);
+        }
+    });
+
+
+
+    // IT Module Routes
+
+    Route::prefix('it')->group(function(){
+        // quotation routes
+        Route::get('quotation','ItController@quotationList')->name('quotationList');
+        Route::get('quotation/create','ItController@quotationCreate')->name('quotationCreate');
+        Route::get('quotation/details/edit/{quotation}','ITController@quotationDetailList')->name('quotationDetails');
+        Route::get('quotation/edit/{quotationDetail}','ITController@quotationDetailEdit')->name('quotationDetailEdit');
+        Route::post('quotation/submit','ITController@quotationSubmit')->name('quotationSubmit');
+        Route::post('quotation/detail/submit','ITController@quotationDetailSubmit')->name('quotationDetailSubmit');
+        // item routes
+        Route::get('item','ItController@itemList')->name('itemList');
+        Route::get('item/add','ItController@itemCreate')->name('itemCreate');
+        Route::get('item/edit/{item}','ItController@itemEdit')->name('itemEdit');
+        Route::post('item/submit','ItController@itemSubmit')->name('itemSubmit');
+        // employee equipment functions
+        Route::get('employee/equipments','ItController@employeeEquipmentList')->name('employeeEquipmentList');
+        Route::get('employee/equipment-details/{employee_id}','ItController@employeeEquipmentDetailList')->name('employeeEquipmentDetailList');
+        Route::post('employee/equipment/update','ItController@employeeEquipmentUpdate')->name('employeeEquipmentAction');
+        Route::get('employee/equipment/delete','ItController@employeeEquipmentRemove')->name('employeeEquipmentRemove');
+        // stock routes
+        Route::get('stocks','ItController@stockList')->name('stockList');
+        Route::get('stock/create','ItController@stockCreate')->name('stockCreate');
+        Route::get('stock/edit/{stock}','ItController@stockEdit')->name('stockEdit');
+        Route::post('stock/submit','ItController@stockSubmit')->name('stockSubmit');
+        // stock detail routes
+        Route::get('stock/details/{stock_id}','ItController@stockDetails')->name('stockDetailList');
+        Route::get('stock/detail/form','ItController@stockItemForm')->name('stockDetailForm');
+        Route::post('stock/detail/submit','ItController@stockDetailSubmit')->name('stockDetailSubmit');
+        // view bill
+        Route::get('bill/view/{bill}','ItController@viewBill')->name('viewBill');
+        //view software
+        Route::get('software/view','ItController@list')->name('softwareView');
+
+        Route::get('edit/employee/email','ItController@editEmail')->name('editEmail');
+        Route::post('update/email','ItController@updateEmail')->name('updateEmail');
+    });
+
+    Route::group(['prefix' => '/daily-report', 'as' => 'dailyReport.'],function(){
+        Route::get('/', 'DailyReportsController@myList')->name('myList');
+        Route::get('/department-list', 'DailyReportsController@departmentReports')->name('departmentReports');
+        Route::get('/submit', 'DailyReportsController@form')->name('form');
+        Route::post('/submit', 'DailyReportsController@submit')->name('submit');
+        Route::get('/export','DailyReportsController@export')->name('exportDailyReport');
+    });
+
+    Route::get('raised/ticket-list','TicketController@itRaiseTicket')->name('itRaiseTicket');
+    Route::post('raised/ticket/action','TicketController@raiseTicketAction')->name('raiseTicketAction');
+    Route::get('ticket-history','TicketController@ticketHistory')->name('ticketHistory');
+    Route::get('assigned/tickets','TicketController@assignedTickets')->name('assignedTicket');
+    Route::get('ticket/detail-list/{id}','TicketController@ticketDetail')->name('ticketDetail');
+    //view ticket category view
+    Route::get('ticket/category','TicketController@categoryView')->name('categoryView');
+
+Route::get('switch-user','UserController@switchUser')->name('switchUser');
+Route::post('/switch-user/account','UserController@loginWithAnotherUser')->name('switchlogin');
+Route::get('/switch/user/back','UserController@switchUserLogout')->name('swithLogout');
+
+Route::get('/recent/joined/employees','EmployeeController@showRecentJoinedUser')->name('recent-joined');
+// Route::get('/show/employee/{user}','UserController@detailUser')->name('detailUser');
+

@@ -1,0 +1,209 @@
+@extends('layouts.master')
+@section('content')
+
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb" class="float-right">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url('dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Employee</li>
+                </ol>
+            </nav>
+        </div>
+        <div class="col-12 mb-3">
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+
+                        {{ Form::open(['method' => 'GET']) }}
+                        <div class="card-body">
+                            <p class="card-title">Filter</p>
+                            <div class="form-group row">
+
+                                {{ Form::label('department_id', 'Select Department', ['class' => 'col-sm-2 col-form-label']) }}
+                                <div class="col-sm-4">
+                                    {{ Form::select('department_id', $department_id, request()->department_id, ['onchange'=>'getEmployees(this.value)','class' => 'form-control selectJS', 'placeholder' => 'Select your department']) }}
+                                </div>
+
+                                {{ Form::label('Select Employee', 'Select Employee', ['class' => 'col-sm-2 col-form-label']) }}
+                                <div class="col-sm-4">
+                                    {{ Form::select('name', $name, request()->name, ['id' => 'employees','class' => 'form-control selectJS', 'placeholder' => 'Select Employee']) }}
+                                </div>
+
+                                {{ Form::label('office_email', 'Select Email', ['class' => 'col-sm-2 col-form-label']) }}
+                                <div class="col-sm-4">
+                                    {{ Form::select('office_email', $office_email, request()->office_email, ['class' => 'form-control selectJS', 'placeholder' => 'Select your email']) }}
+                                </div>
+
+                                {{ Form::label('status', 'Select Status', ['class' => 'col-sm-2 col-form-label']) }}
+                                <div class="col-sm-4">
+                                    {{ Form::select('status', ['active'=> 'Active', 'exit' => 'Exit'], request()->status, ['class' => 'form-control selectJS', 'placeholder' => 'Select your email']) }}
+                                </div>
+
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ Form::submit('Filter', ['class' => 'btn m-2 btn-primary']) }}
+                                    <a href="{{ request()->url() }}" class="btn m-2 btn-success">Clear Filter</a>
+                                    {{ Form::close() }}
+                                </div>
+                                @can('hrUpdateEmployee', new App\Models\Employee())
+                                    <div class="col-md-6">
+                                     
+                                        
+                                        <a href="{{ route('exportEmployee',request()->query()) }}" class="btn m-2 float-right btn-primary">Export</a>
+                                        <a href="{{ route('createEmployee') }}" class="btn m-2 float-right btn-success">Add new
+                                            Record</a>
+                                    </div>
+                                @endcan
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-12">
+            <!-- Default box -->
+
+            <div class="card">
+
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="col-md-8 float-right text-right">
+                                <b>Total Results: </b>{{ $employees->total() }}
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12 table-responsive ">
+                            <table id="" class="table table-hover">
+
+                                <thead>
+                                    <tr>
+                                        <th>Picture</th>
+                                        <th>Name</th>
+                                        <th>Email</th>
+                                        <th>Department</th>
+                                        <th>Role</th>
+                                        @can('status', new App\Models\Employee())
+                                            <th>Status</th>
+                                        @endcan
+                                        {{-- @can('hrView', new App\Models\Attendance())
+                                            <th class="hidden">Attendance</th>
+                                        @endcan --}}
+                                        <th>Details</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                    @foreach ($employees as $employee)
+                                        <tr>
+                                            <td><a target="_blank" href="{{ $employee->image_source }}"><img
+                                                        src="{{ $employee->image_source }}" width="42" height="42"></a>
+                                            </td>
+                                            <td>{{ $employee->name }}</td>
+                                            <td>{{ $employee->office_email }}</td>
+                                            <td>{{ $employee->department->name ?? null }}</td>
+                                            <td>{{ $employee->user->hasRole('Manager') ? 'Manager' :'Employee'}}</td>
+                                            <td>
+                                                @if ($employee->is_active == 1)
+                                                    Active
+                                                @else
+                                                    Exit
+                                                @endif
+                                            </td>
+                                            {{-- <td class="hidden"><a
+                                                    href="{{ route('employeeAttendance', ['employee' => $employee->id]) }}"
+                                                    class="p-2 text-primary fas fa-user-clock"
+                                                    style="font-size:20px;border-radius:5px;"></a></td> --}}
+                                            <td><a href="{{ route('employeeDetail', ['employee' => $employee->id]) }}"
+                                                    class="p-2 text-primary fas fa-address-card"
+                                                    style="font-size:20px;border-radius:5px;"></a></td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row mt-4 float-right">
+                        <div class="col-md-12">
+                            {{ $employees->appends(request()->query())->links() }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+@endsection
+
+
+@section('footerScripts')
+    <script>
+        function getEmployees(department_id) {
+        if (department_id) {
+            $.ajax({
+                url: "{{route('getEmployees')}}/" + department_id,
+                type: 'get',
+                dataType: 'json',
+                success: function (response) {
+                    var options = `<option value=''></option>`;
+                    $.each(response, function (id, name) {
+                        options += "<option value='" + name + "'>" + name + "</option>";
+                    });
+                
+                    $('#employees').html(options);
+                    $("select").select2({
+                        placeholder: "Select an option"
+                    });
+                }
+            })
+        }
+    }
+        $('#example1').dataTable({
+            ordering: false,
+            fixedColumns: true,
+            'searching': false,
+
+            columnsDefs: [{
+                    "name": "Picture",
+                    sorting: false,
+                    searching: false
+                },
+                {
+                    "name": "Name"
+                },
+                {
+                    "name": "Email"
+                },
+                {
+                    "name": "Department"
+                },
+                {
+                    "name": "Status",
+                    sorting: false,
+                    searching: false
+                },
+                {
+                    "name": "Attendance",
+                    sorting: false,
+                    searching: false
+                },
+                {
+                    "name": "Details",
+                    sorting: false,
+                    searching: false
+                },
+
+            ],
+
+        });
+    </script>
+
+@endsection
