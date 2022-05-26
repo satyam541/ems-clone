@@ -27,6 +27,7 @@
                                             <th>Category</th>
                                             <th>Subject</th>
                                             <th>Status</th>
+                                            <th>Raised By</th>
                                             <th>Detail</th>
                                         </tr>
                                     </thead>
@@ -38,6 +39,7 @@
                                                 <td>{{ucfirst($ticket->ticketCategory->name)}}</td>
                                                 <td>{{$ticket->subject}}</td>
                                                 <td>{{$ticket->status}}</td>
+                                                <td>{{$ticket->raisedBy->name ?? ''}}</td>
                                                 <td><a href="{{route('ticketDetail',['id'=>$ticket->id])}}" class="btn btn-warning btn-lg p-3">Detail</a></td>
                                                 {{-- <td>
                                                 @if($ticket->status == 'Closed')
@@ -67,26 +69,7 @@
         ordering: false,
         "scrollX": true,
 
-        columns: [
-                {
-                "name": "Ticket No."
-                },
-                {
-                "name": "Type"
-                },
-                {
-                "name": "Category"
-                },
-                {
-                "name": "Subject"
-                },
-                {
-                "name": "Status"
-                },
-                {
-                'name':"Detail"
-                },
-        ],
+       
     });
     $('tbody').on('click', 'button', function() {
                     var button = this;

@@ -40,9 +40,10 @@
                                     <tbody>
                                         @foreach ($tickets as $ticket)
                                             <tr>
+                                                {{-- {{dd($ticket)}} --}}
                                                 <td style="white-space: normal;">{{$ticket->id}}</td>
-                                                <td style="white-space: normal;">{{$ticket->employee->department->name ?? ''}}</td>
-                                                <td style="white-space: normal;">{{$ticket->employee->name ?? ''}}</td>
+                                                <td style="white-space: normal;">{{$ticket->user->employee->department->name ?? ''}}</td>
+                                                <td style="white-space: normal;">{{$ticket->user->name ?? ''}}</td>
                                                 <td style="white-space: normal;">{{ucfirst($ticket->ticketCategory->type)}}</td>
                                                 <td style="white-space: normal;">{{ucfirst($ticket->ticketCategory->name)}}</td>
                                                 <td style="white-space: normal;">{{$ticket->subject}}</td>

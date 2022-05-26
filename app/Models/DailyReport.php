@@ -9,16 +9,18 @@ class DailyReport extends Model
     protected $primaryKey   = 'id';
     protected $guarded      = ['id'];
 
-    public function employee()
+  
+
+    public function user()
     {
-        return $this->belongsTo('App\Models\Employee', 'employee_id');
+        return $this->belongsTo('App\User', 'user_id');
     }
 
     function employeeLeaveNature()
     {   
-        $leaveNature  =  $this->employee->leaves->where('from_date', '<=', $this->report_date)
+        $leaveNature  =  $this->user->leaves->where('from_date', '<=', $this->report_date)
                             ->where('to_date', '>=', $this->report_date)->where('status', 'Approved')
-                            ->first()->leave_type ?? null;
+                            ->first()->leave_session ?? null;
     
         return empty($leaveNature) ? 'Present' : $leaveNature;
     }

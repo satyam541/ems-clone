@@ -32,7 +32,7 @@ class RemoteAttendance extends Model
 
         if(!empty($leave))
         {
-            return $leave->leave_type;
+            return $leave->leave_session;
         }
 
         return "Present";

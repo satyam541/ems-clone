@@ -54,16 +54,17 @@
 
                                     <thead>
                                         <tr>
-                                            <th>Leave Nature</th>
+                                            <th>Leave Session</th>
                                             <th>Leave Type</th>
                                             <th>Employee</th>
+                                            <th>Applied At</th>
                                             @if (count($departmentIds) > 1)
                                                 <th>Department</th>
                                             @endif
                                             <th>From Date</th>
                                             <th>To Date</th>
                                             <th>Duration</th>
-                                            <th>Timings</th>
+                                            {{-- <th>Timings</th> --}}
                                             <th>Status</th>
                                         </tr>
                                     </thead>
@@ -76,22 +77,34 @@
                                         </tr>
                                         @else
                                         @foreach ($leaves as $leave)
-                                            <tr class="border-top">
-                                                <td>{{ $leave->leave_nature }}</td>
-                                                <td>{{ $leave->leave_type }}</td>
-                                                <td>{{ $leave->employee->name }}</td>
+                                            @php
+                                            $class  =   'table-danger';
+                                            if($leave->status=='Pre Approved')
+                                            {
+                                                $class = 'table-success';
+                                            }
+                                            elseif($leave->status=='Pending' || $leave->status=='Forwarded' || $leave->status=='Auto Forwarded')
+                                            {
+                                                $class='';
+                                            }
+                                            @endphp
+                                            <tr class="border-top {{$class}}">
+                                                <td>{{ $leave->leave_session }}</td>
+                                                <td>{{ $leave->leaveType->name ?? '' }}</td>
+                                                <td>{{ $leave->user->name }}</td>
+                                                <td>{{getFormatedDate($leave->created_at)}}</td>
                                                 @if (count($departmentIds) > 1)
-                                                    <td>{{ $leave->employee->department->name ?? '' }}</td>
+                                                    <td>{{ $leave->user->employee->department->name ?? '' }}</td>
                                                 @endif
                                                 <td>{{ getFormatedDate($leave->from_date) }}</td>
                                                 <td>{{ getFormatedDate($leave->to_date) }}</td>
                                                 <td>{{ $leave->duration }} {{ Str::plural('Day', $leave->duration) }}</td>
-                                                <td>{{ getFormatedTime($leave->timing) }}</td>
+                                                {{-- <td>{{ getFormatedTime($leave->timing) }}</td> --}}
                                                 <td>{{ $leave->status }}</td>
 
                                             </tr>
                                             <tr>
-                                                @if (is_null($leave->is_approved))
+                                                @if (is_null($leave->is_approved) && $leave->forwarded != 1)
                                                     <td colspan='7'>
                                                         {{ Form::open(['class' => 'd-flex']) }}
                                                         {{ Form::hidden('id', $leave->id) }}
@@ -120,9 +133,9 @@
 
                                                         <div class="col-3 action">
                                                             <br>
-                                                            @if ($leave->forwardedLeave())
-                                                                <button type="submit" value="approve"
-                                                                    class="btn btn-primary btn-rounded m-3 leave-action">Approve</button>
+                                                            @if ($leave->forwardedLeave() && $leave->forwarded != 1)
+                                                                <button type="submit" value="Approved"
+                                                                    class="btn btn-primary btn-rounded m-3 leave-action">Approved</button>
 
                                                                 <button type="submit" value="reject"
                                                                     class="btn btn-danger btn-rounded m-3 leave-action">Reject</button>
@@ -137,15 +150,15 @@
                                                         {{ Form::close() }}
                                                     </td>
                                                 @else
-                                                    <td colspan='7'>
+                                                    {{-- <td colspan='7'>
                                                         {{ Form::model($leave, ['route' => $submitRoute, 'class' => 'd-flex']) }}
                                                         <div class="col-3">
                                                             {{ Form::label('reason', 'Reason', ['class' => 'font-weight-bold']) }}
                                                             {{ Form::textarea('reason', $leave->reason, ['rows' => '1', 'cols' => '20', 'class' => 'form-control', 'disabled' => true]) }}
                                                         </div>
                                                         <div class="col-3">
-                                                            {{ Form::label('leave_type', 'Current Leave Type', ['class' => 'font-weight-bold']) }}<br>
-                                                            {{ Form::select('leave_type', $leaveTypes, $leave->leave_type, ['class' => 'form-control selectJS', 'required']) }}
+                                                            {{ Form::label('leave_session', 'Current Leave Type', ['class' => 'font-weight-bold']) }}<br>
+                                                            {{ Form::select('leave_session', $leaveTypes, $leave->leave_session, ['class' => 'form-control selectJS', 'required']) }}
                                                         </div>
                                                         {{ Form::hidden('action') }}
                                                         {{ Form::hidden('id', $leave->id) }}
@@ -164,7 +177,7 @@
                                                                 class="btn btn-primary btn-rounded m-3 leave-alter">Update</button>
                                                         </div>
                                                         {{ Form::close() }}
-                                                    </td>
+                                                    </td> --}}
                                                 @endif
                                             </tr>
                                         @endforeach
@@ -206,11 +219,11 @@
                 $('#dateTo').val(end.format('YYYY-M-DD'));
             }
         );
-        
+
         $('#date-btn').on('cancel.daterangepicker', function(ev, picker) {
             clearDateFilters('date-btn','date');
         });
- 
+
         function clearDateFilters(id, inputId){
             $('#'+id+' span').html('<span> <i class="fa fa-calendar"></i>  &nbsp;Select Date&nbsp;</span>')
             $('#'+inputId+'From').val('');

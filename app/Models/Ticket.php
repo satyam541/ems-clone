@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Asset;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Model;
 
 class Ticket extends Model
 {
@@ -14,9 +15,17 @@ class Ticket extends Model
     // {
     //     return $this->morphTo(__FUNCTION__,'module_type','module_id');
     // }
-    function employee()
+    // function employee()
+    // {
+    //     return $this->belongsTo('App\Models\Employee','employee_id','id');
+    // }
+    function user()
     {
-        return $this->belongsTo('App\Models\Employee','employee_id','id');
+        return $this->belongsTo('App\User','user_id','id');
+    }
+    function raisedBy()
+    {
+        return $this->belongsTo('App\User','raised_by','id');
     }
     function actionBy()
     {
@@ -37,6 +46,11 @@ class Ticket extends Model
     {
         return $this->ticketLogs->where('action','Assigned')->last()->actionBy->name ?? 'N\A';
 
+    }
+
+    public function asset()
+    {
+        return $this->belongsTo(Asset::class,'barcode');
     }
     
 }

@@ -27,7 +27,7 @@ class UserController extends Controller
         $this->authorize('update', $user);
         $data['user']   = $user;
         $data['roles']  = Role::all();
-
+        $data['userTypes']      =   config('employee.userTypes');
         return view('user.userForm', $data);
     }
 
@@ -37,7 +37,9 @@ class UserController extends Controller
         $inputs             = $request->all();
         $user->name         = $inputs['name'];
         $user->email        = $inputs['email'];
+        $user->user_type    = $inputs['user_type'];
         $user->is_active    = empty($inputs['is_active'])? 0 : 1;
+        $user->is_external    = empty($inputs['is_external'])? 0 : 1;
         $user->save();
 
         if (isset($inputs['resetPwd']))
@@ -122,7 +124,7 @@ class UserController extends Controller
 
     public function switchUser()
     {
-        abort_if(!auth()->user()->hasRole('admin'), 404);
+        // abort_if(!auth()->user()->hasRole('admin'), 404);
 
         $data['users']=User::where('is_active','1')->pluck('name','id')->toArray();
 
@@ -132,7 +134,7 @@ class UserController extends Controller
 
     public function loginWithAnotherUser(Request $request)
     {
-        abort_if(!auth()->user()->hasRole('admin'), 404);
+        // abort_if(!auth()->user()->hasRole('admin'), 404);
 
         $input  = $request->input();
         $user   = User::find($input['id']);
@@ -167,7 +169,7 @@ class UserController extends Controller
 
     public function laravelLogs()
     {
-        
+
         if(in_array(strtolower(auth()->user()->email), User::$developers))
         {
         $log    =   new LogViewerController();

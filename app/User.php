@@ -2,14 +2,20 @@
 
 namespace App;
 
+use App\Models;
 use App\Models\Module;
 use App\User as Users;
+use App\Models\ShiftType;
+use App\Models\Attendance;
+use Illuminate\Support\Arr;
+use App\Models\LeaveBalance;
+use App\Models\EmployeePreDetails;
+use Illuminate\Support\Collection;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Arr;
 
 class User extends Authenticatable
 {
@@ -45,7 +51,19 @@ class User extends Authenticatable
 
     private $permissionsCache; // related user permissions cache
     private $rolesCache;       // related user role cache
-    public static $developers = ['satyam.suri@themsptraining.com', 'konica.arora@themsptraining.com'];
+    public static $developers = ['satyam.suri@theknowledgeacademy.com', 'konica.arora@theknowledgeacademy.com','sandeep.kaur@theknowledgeacademy.com','dheeraj.arora@theknowledgeacademy.com'];
+    
+    protected static function boot()
+    {
+        parent::boot();
+        static::addGlobalScope('is_active', function (Builder $builder) {
+            $builder->where('users.is_active', '=', 1);
+        });
+        // static::addGlobalScope('user_type', function (Builder $builder) {
+        //     $builder->where('users.user_type', '=', 'Employee');
+        // });
+    }
+
     public function employee()
     {
         return $this->hasOne('App\Models\Employee', 'user_id')->withoutGlobalScope('guest');
@@ -119,6 +137,11 @@ class User extends Authenticatable
         return $this->hasMany('App\Models\Notifications', 'user_id')->where('read_on', null)->orderBy('created_at','desc');
     }
 
+    
+    public function assetAssignments()
+    {
+        return $this->hasMany('App\Models\Asset', 'assigned_to');
+    }
     public function activity()
     {
         return  $this->morphOne('App\Models\ActivityLog', 'module');
@@ -134,5 +157,42 @@ class User extends Authenticatable
             $query->whereIn('name', $role);
         });
         return $users->pluck('id')->toArray();
+    }
+    
+    public function employeePreDetails()
+    {
+        return $this->hasOne(EmployeePreDetails::class);
+    }
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+    public function leaveBalances()
+    {
+        return $this->hasMany(LeaveBalance::class,'user_id');
+    }
+
+    public function shiftType()
+    {
+        return $this->belongsTo(ShiftType::class,'shift_type_id','id');
+    }
+    public function leaves()
+    {
+        return $this->hasMany('App\Models\Leave', 'user_id');
+    }
+
+    public function announcements()
+    {
+        return $this->belongsToMany('App\Models\Announcement','user_announcements','user_id','announcement_id');
+    }
+
+    public function tickets()
+    {
+        return $this->hasMany('App\Models\Ticket','user_id');
+    }
+
+    public function workReports()
+    {
+        return $this->hasMany('App\Models\DailyReport', 'user_id');
     }
 }

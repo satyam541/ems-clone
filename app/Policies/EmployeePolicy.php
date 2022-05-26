@@ -144,5 +144,10 @@ class EmployeePolicy
 
 
     }
+
+    public function barcodeListView(User $user, Employee $model)
+    {
+        return $user->hasPermission("Employee","barcodeListView");
+    }
   
 }

@@ -23,14 +23,40 @@
 
                                 <div class="col-md-3">
                                     @can('ticketSolver', new App\Models\Ticket())
-                                        @if ($ticketDetail->status != 'Closed' && $ticketDetail->status!='Sorted')
+                                        @if ($ticketDetail->status != 'Closed' && $ticketDetail->status != 'Sorted')
                                             <a class="btn btn-primary float-right px-5" data-toggle="modal" id="action"
                                                 data-target="#exampleModal">Action</a>
                                         @endif
                                     @endcan
                                 </div>
                                 <div class="col-md-3">
-                                    @if ($ticketDetail->status == 'Closed' && $ticketDetail->employee_id == auth()->user()->employee->id)
+                                    {{-- @if ($ticketDetail->status == 'Closed')
+                                       
+                                            <button onclick='action("{{ $ticketDetail->id }}","Reopen")'
+                                                class="btn btn-primary btn-lg p-3" data-toggle="modal"
+                                                data-target="#closeTicket">Reopen Ticket</button>
+                                       
+                                    @else
+                                        
+                                            <button class="btn btn-danger"
+                                                onclick='action("{{ $ticketDetail->id }}","Closed")' data-toggle="modal"
+                                                data-target="#closeTicket">Close Ticket</button>
+                                        
+                                    @endif --}}
+
+                                    @if (($ticketDetail->ticketCategory->type == 'HR' && $ticketDetail->user_id == auth()->user()->id) ||
+                                        ( $ticketDetail->ticketCategory->type == 'IT' && auth()->user()->hasRole('powerUser')))
+                                        @if ($ticketDetail->status == 'Closed')
+                                            <button onclick='action("{{ $ticketDetail->id }}","Reopen")'
+                                                class="btn btn-primary btn-lg p-3" data-toggle="modal"
+                                                data-target="#closeTicket">Reopen Ticket</button>
+                                        @else
+                                            <button class="btn btn-danger"
+                                                onclick='action("{{ $ticketDetail->id }}","Closed")' data-toggle="modal"
+                                                data-target="#closeTicket">Close Ticket</button>
+                                        @endif
+                                    @endif
+                                    {{-- @if ($ticketDetail->status == 'Closed' && $ticketDetail->employee_id == auth()->user()->employee->id)
                                         <button onclick='action("{{ $ticketDetail->id }}","Reopen")'
                                             class="btn btn-primary btn-lg p-3" data-toggle="modal"
                                             data-target="#closeTicket">Reopen Ticket</button>
@@ -40,13 +66,12 @@
                                                 onclick='action("{{ $ticketDetail->id }}","Closed")' data-toggle="modal"
                                                 data-target="#closeTicket">Close Ticket</button>
                                         @endif
-                                    @endif
+                                    @endif --}}
                                 </div>
 
                             </div>
                             <div class="">
                                 <table id="example1" style="width:100%" class="table table-responsive ">
-
                                     <tbody>
                                         <tr>
                                             <th>Type</th>
@@ -59,11 +84,11 @@
                                         </tr>
                                         <tr>
                                             <th>Employee</th>
-                                            <td>{{ $ticketDetail->employee->name }}</td>
+                                            <td>{{ $ticketDetail->user->name ?? ''}}</td>
                                         </tr>
                                         <tr>
                                             <th>Department</th>
-                                            <td>{{ $ticketDetail->employee->department->name }}</td>
+                                            <td>{{ $ticketDetail->user->employee->department->name ?? '' }}</td>
                                         </tr>
                                         <tr>
                                             <th>Subject</th>
@@ -77,11 +102,17 @@
                                                 {{ $ticketDetail->description }}
                                             </td>
                                         </tr>
-                                        @if(!empty($ticketDetail->remote_id))
-                                        <tr>
-                                            <th>AnyDesk</th>
-                                            <td>{{$ticketDetail->remote_id}}</td>
-                                        </tr>
+                                        @if (!empty($ticketDetail->remote_id))
+                                            <tr>
+                                                <th>AnyDesk</th>
+                                                <td>{{ $ticketDetail->remote_id }}</td>
+                                            </tr>
+                                        @endif
+                                        @if (!empty($ticketDetail->barcode))
+                                            <tr>
+                                                <th>Barcode</th>
+                                                <td>{{ $ticketDetail->barcode }}</td>
+                                            </tr>
                                         @endif
                                         <tr>
                                             <th>Priority</th>
@@ -110,7 +141,7 @@
                         <div class="card-body">
                             <h4 class="card-title">Updates</h4>
                             <ul class="bullet-line-list">
-                                
+
                                 @foreach ($ticketLogs as $log)
                                     <li>
                                         <h6>{{ $log->action }}</h6>
@@ -133,7 +164,7 @@
                                 @endforeach
                                 <li>
                                     <h6>Ticket Opened</h6>
-                                    <p>Ticket opened by {{ $ticketDetail->employee->name }}</p>
+                                    <p>Ticket opened by {{ $ticketDetail->user->name ?? ''}}</p>
                                     <p class="text-muted mb-4">
                                         <i class="ti-time"></i>
                                         {{ getFormatedDateTime($ticketDetail->created_at) }}
@@ -157,7 +188,7 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-        
+
                 {{ Form::open(['route' => 'raiseTicketAction']) }}
                 <div class="modal-body">
                     {{ Form::hidden('id', $ticketDetail->id) }}
@@ -175,9 +206,10 @@
                                 <select name="assigned_to" class="col-sm-10 form-control selectJS" id="assignedTo"
                                     title="Select Employee" placeholder="Select Employee"
                                     data-placeholder="Select Employee">
-                                    @foreach ($employees as $employee)
-                                        <option value="{{ $employee->id }}">{{ $employee->name }}
-                                            ({{ $employee->department->name }})</option>
+                                    @foreach ($users as $user)
+                                        <option value="{{ $user->id }}">{{ $user->name ?? ''}}
+                                            ({{ $user->employee->department->name ?? ''}})
+                                        </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -199,8 +231,7 @@
         </div>
     </div>
 
-    <div class="modal fade" id="closeTicket" tabindex="-1" role="dialog"
-        aria-hidden="true">
+    <div class="modal fade" id="closeTicket" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
@@ -253,5 +284,4 @@
 
         }
     </script>
-
 @endsection

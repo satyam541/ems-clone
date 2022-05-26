@@ -93,7 +93,7 @@ class AppServiceProvider extends ServiceProvider
         Interviewee::observe(IntervieweeObserver::class);
         Document::observe(DocumentObserver::class);
         User::observe(UserObserver::class);
-        Attendance::observe(AttendanceObserver::class);
+        // Attendance::observe(AttendanceObserver::class);
         Leave::observe(LeaveObserver::class);
         Equipment::observe(EquipmentObserver::class);
         Specification::observe(SpecificationObserver::class);

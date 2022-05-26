@@ -24,6 +24,9 @@ Route::get('/get/employees/{department?}','EmployeeController@getEmployees')->na
 Route::get('/get/email/{employee?}','EmployeeController@getEmail')->name('getOfficeEmail');
 Route::get('/get/employee/detail/{employee?}','EmployeeController@getEmployeeDetail')->name('getEmployeeDetail');
 
+Route::get('/get/users/{department?}','ManualAttendanceController@getUsers')->name('getUsers');
+Route::get('/get/attendance','ManualAttendanceController@getAttendance')->name('getAttendance');
+
 Route::prefix('employee')->group(function () {
     Route::get('/list','EmployeeController@list')->name('employeeList');
     Route::delete('/delete','EmployeeController@delete')->name('deleteEmployee');

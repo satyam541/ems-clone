@@ -47,5 +47,19 @@ class AttendancePolicy
     {
         return $user->hasPermission("Attendance","managerView");
     }
+    public function viewAttendance(User $user, Attendance $attendance)
+    {
+        return $user->hasPermission("Attendance","Punch Attendance");
+    }
+    public function create(User $user, Attendance $attendance)
+    {
+        return $user->hasPermission("Attendance","create");
+    }
+    public function dashboard(User $user, Attendance $attendance)
+    {
+        return $user->hasPermission("Attendance","dashboard");
+    }
+
+  
   
 }

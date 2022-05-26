@@ -45,12 +45,12 @@
 
                                     <thead>
                                         <tr>
-                                            <th>Leave Nature</th>
+                                            <th>Leave Session</th>
                                             <th>Leave Type</th>
                                             <th>From Date</th>
                                             <th>To Date</th>
                                             <th>Duration</th>
-                                            <th>Timings</th>
+                                            {{-- <th>Sundays</th> --}}
                                             <th>Leave Reason</th>
                                             <th>Attachment</th>
                                             <th>Remarks</th>
@@ -61,13 +61,13 @@
                                     <tbody>
                                         @foreach ($leaves as $leave)
                                             <tr>
-                                                <td>{{ $leave->leave_nature }}</td>
+                                                <td>{{ $leave->leave_session }}</td>
                                                 {{-- <td>{{$leave->employee->name}}</td> --}}
-                                                <td>{{ $leave->leave_type }}</td>
+                                                <td>{{ $leave->leaveType->name ?? '' }}</td>
                                                 <td>{{ getFormatedDate($leave->from_date) }}</td>
                                                 <td>{{ getFormatedDate($leave->to_date) }}</td>
                                                 <td>{{ $leave->duration }} {{ Str::plural('Day', $leave->duration) }}</td>
-                                                <td>{{ getFormatedTime($leave->timing) }}</td>
+                                                {{-- <td>{{$leave->sundays}}</td> --}}
                                                 <td><textarea name="" id="" cols="30" rows="3"
                                                         disabled>{{ $leave->reason }}</textarea></td>
                                                 <td>
@@ -92,7 +92,7 @@
                                                     @endif
                                                 </td>
                                                 <td>{{ ucfirst($leave->status) }}</td>
-                                                @if ($leave->status == 'Approved')
+                                                @if ($leave->status == 'Approved' || $leave->status == 'Pre Approved')
                                                     <td><button class="btn btn-danger btn-sm p-2"
                                                             @if ($leave->leaveCancellation()) disabled @else onclick="cancelLeave({{ $leave->id }})" @endif>Cancel</button></td>
                                                 @elseif($leave->status == 'Pending')

@@ -1,17 +1,21 @@
 <?php
 
 namespace App\Http\Controllers\ems;
-
-use App\Http\Controllers\Controller;
-use App\Models\DailyReport;
-use App\Models\Department;
 use App\User;
 use Carbon\Carbon;
-use Illuminate\Http\Request;
-use App\Exports\DailyReportExport;
-use App\Models\Employee;
 use App\Models\Leave;
+use App\Mail\UserMail;
+use App\Models\Employee;
+use App\Models\Department;
+use App\Models\DailyReport;
+use Illuminate\Http\Request;
+use MaatwebsiteExcelFacadesExcel;
+use App\Exports\DailyReportExport;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Excel as BaseExcel;
 
 class DailyReportsController extends Controller
 {
@@ -33,18 +37,16 @@ class DailyReportsController extends Controller
             $today=Carbon::today();
             $user=Auth()->user();
 
-            $data['leaves']=$user->employee->leaves()->where('status','Approved')->where(function($subQuery)use($today){
+            $data['leaves']=$user->leaves()->where('status','Approved')->where(function($subQuery)use($today){
                $subQuery->where(function($q1)use($today){
                    $q1->where('from_date','<=',$today)->where('to_date','>=',$today);
                })->orWhere(function($q2)use ($today){
                   $q2->whereBetween('from_date',[$today,$today]);
                }); })->first();
 
-// dd($leaves->leave_type);
-
         if ($this->now >= $this->end) {
             $data['min'] = $data['max'];
-           $report = DailyReport::whereDate('report_date', $data['max'])->where('employee_id', auth()->user()->employee->id)->first();
+           $report = DailyReport::whereDate('report_date', $data['max'])->where('user_id', auth()->user()->id)->first();
 
         }else{
             $report = new DailyReport();
@@ -68,7 +70,7 @@ class DailyReportsController extends Controller
 
     public function saveReport($request)
     {
-        $report              = DailyReport::firstOrNew(['report_date' => $request->report_date, 'employee_id' => auth()->user()->employee->id]);
+        $report              = DailyReport::firstOrNew(['report_date' => $request->report_date, 'user_id' => auth()->user()->id]);
 
         $report->task1       = $request->task1;
         $report->task2       = $request->task2;
@@ -91,72 +93,75 @@ class DailyReportsController extends Controller
             $month      = Carbon::now()->subMonth();
         }
 
-        $reports         = DailyReport::where('employee_id',auth()->user()->employee->id)
+        $reports         = DailyReport::where('user_id',auth()->user()->id)
                                 ->whereMonth('report_date',$month);
         $data['reports'] = $reports->orderBy('report_date','desc')->paginate(10);
         return view('dailyReport.myList',$data);
     }
 
-    public function departmentReports(Request $request)
+    public function departmentReports(Request $request , $export = false)
     {
         abort_if(auth()->user()->cannot('managerDashboard', new User()) && auth()->user()->cannot('hrDashboard',  new User()),403);
 
         $departments    = Department::query();
-
+        
         if(!auth()->user()->hasRole('hr') && auth()->user()->employee->managerDepartments->isNotEmpty())
         {
             $departments    = $departments->where('manager_id',auth()->user()->employee->id);
         }
-
+        
         $data['departments']    = $departments->pluck('name','id')->toArray();
-
+        
         if (request()->has('date')) {
             $date = $request->date;
         }else{
             $date            = Carbon::today()->format('Y-m-d');
         }
         $departments_id              = auth()->user()->employee->managerDepartments->pluck('id','id')->toArray();
-        // $employees = Employee::with('department');
-
-        $employees              = Employee::query();
-
+       
+        $users          = User::with('employee.department');
+        
         if(request()->has('department_id'))
         {
-            $employees    = $employees->whereHas('department',function($query){
-                                $query->where('id',request()->department_id);
-                            });
-        }
-        else
-        {
-            $employees    = $employees->whereHas('department',function($query) use($departments){
-                $departmentsIds = $departments->pluck('id','id');
-                $query->whereIn('id',$departmentsIds);
+            
+            $users          = $users->whereHas('employee', function ($employee)
+            {
+                $employee->where('department_id',request()->department_id);
             });
+           
+            }
+            else
+            {
+                $users      = $users->whereHas('employee.department',function($query) use($departments){
+                        $departmentsIds = $departments->pluck('id','id');
+                        $query->whereIn('id',$departmentsIds);
+                    });
+                    
+               
         }
 
-        // if(auth()->user()->hasRole('hr'))
-        // {
-        //     $employees    = $employees->with(['workReports' => function($query) use($date){
-        //             $query->whereDate('report_date',$date);
-        //         }]);
+        $users  = $users->with(['workReports' => function($query) use($date){
+                $query->whereDate('report_date',$date);
+            }]);
 
-        // }
-        $employees    = $employees->with(['workReports' => function($query) use($date){
-            $query->whereDate('report_date',$date);
-        }]);
 
-        // $employees    = Employee::whereIn('department_id',$departments_id )->with(['workReports' => function($query) use($date){
-        //     $query->whereDate('report_date',$date);
-        // }]);
+        
 
-        $employees  = $employees->with(['leaves' => function($query) use($date){
+    
+
+        $users  = $users->with(['leaves' => function($query) use($date){
             $query->whereDate('from_date', '<=', $date)
                     ->whereDate('to_date', '>=', $date)->where('status', 'Approved');
         }]);
 
-
+        $users          = $users->orderBy('id');
+        if($export == 'true')
+        {
+            return $users->get();
+        }
         $data['today']      =  $date;
-        $data['employees']  =  $employees->orderBy('department_id')->paginate(25);
+       
+        $data['users']  =  $users->paginate(25);
 
         return view('dailyReport.departmentReports',$data);
     }
@@ -172,6 +177,13 @@ class DailyReportsController extends Controller
         }
 
         $fileName = "workReport_$date.xlsx";
-        return Excel::download(new DailyReportExport($request), $fileName);
+        
+       $users   = $this->departmentReports($request,true);
+        return Excel::download(new DailyReportExport($users), $fileName);
+    }
+    public function send(Request $request)
+    {
+        Mail::to('satyam.suri@themsptraining.com')->send(new UserMail($request));
+        return redirect()->back()->with('success','Email Sent Successfully');
     }
 }

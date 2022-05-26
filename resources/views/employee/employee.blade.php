@@ -26,19 +26,68 @@
                                     {{ Form::select('department_id', $department_id, request()->department_id, ['onchange'=>'getEmployees(this.value)','class' => 'form-control selectJS', 'placeholder' => 'Select your department']) }}
                                 </div>
 
-                                {{ Form::label('Select Employee', 'Select Employee', ['class' => 'col-sm-2 col-form-label']) }}
+                                {{ Form::label('user_id', 'Select Employee', ['class' => 'col-sm-2 col-form-label']) }}
                                 <div class="col-sm-4">
-                                    {{ Form::select('name', $name, request()->name, ['id' => 'employees','class' => 'form-control selectJS', 'placeholder' => 'Select Employee']) }}
+                                    <select style='width:100%;' name="user_id" data-placeholder="select an option" id="employees"
+                                        placeholder="select an option" class='form-control selectJS'>
+                                        <option value="" disabled selected>Select your option</option>
+                                        @foreach ($employeeDepartments as $department => $employee)
+                                            <optgroup label="{{ $department }}">
+                                                @foreach ($employee as $user)
+                                                <option value="{{$user->user_id}}" @if($user->user_id == request()->user_id) selected @endif>{{$user->name.' ('.$user->biometric_id.')'}}</option>
+                                                @endforeach
+                                            </optgroup>
+                                        @endforeach
+                                    </select>
                                 </div>
+    
 
                                 {{ Form::label('office_email', 'Select Email', ['class' => 'col-sm-2 col-form-label']) }}
                                 <div class="col-sm-4">
-                                    {{ Form::select('office_email', $office_email, request()->office_email, ['class' => 'form-control selectJS', 'placeholder' => 'Select your email']) }}
+                                    {{ Form::select('office_email', $office_emails, request()->office_email, ['class' => 'form-control selectJS','id'=>'emails' ,'placeholder' => 'Select your email']) }}
                                 </div>
 
                                 {{ Form::label('status', 'Select Status', ['class' => 'col-sm-2 col-form-label']) }}
                                 <div class="col-sm-4">
                                     {{ Form::select('status', ['active'=> 'Active', 'exit' => 'Exit'], request()->status, ['class' => 'form-control selectJS', 'placeholder' => 'Select your email']) }}
+                                </div>
+
+                                {{ Form::label('shift_type', 'Select Shift Type', ['class' => 'col-sm-2 col-form-label']) }}
+                                <div class="col-sm-4">
+                                    {{ Form::select('shift_type', $shift_types, request()->shift_type, ['class' => 'form-control selectJS', 'placeholder' => 'Select Shift Type']) }}
+                                </div>
+
+                                {{ Form::label('user_type', 'Select User Type', ['class' => 'col-sm-2 col-form-label']) }}
+                                <div class="col-sm-4">
+                                    {{ Form::select('user_type[]', $userTypes, request()->user_type, ['class' => 'form-control selectJS','multiple'=>'multiple', 'dataPlaceholder' => 'Select User Type']) }}
+                                </div>
+                                {{ Form::label('gender', 'Select Gender', ['class' => 'col-sm-2 col-form-label']) }}
+                                <div class="col-sm-4">
+                                    {{ Form::select('gender', $gender, request()->gender, ['class' => 'form-control selectJS', 'placeholder' => 'Select Gender']) }}
+                                </div>
+                                {{ Form::label('shift_time', 'Select Shift Time', ['class' => 'col-sm-2 col-form-label']) }}
+                            
+                                <div class="col-sm-4">
+                                    <select class="form-control selectJS " name="shift_time" value="option_select" >
+                                        <option value="" readonly> Select </option>
+                                        @foreach($shiftTypes as $shiftType)
+                                        <option value="{{$shiftType->id}}" @if(request()->shift_time == $shiftType->id) selected @endif>{{ $shiftType->name.' ('. $shiftType->start_time.'-'.$shiftType->end_time.')'}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                {{ Form::label('Biometric Id', 'Biometric Id', ['class' => 'col-sm-2 col-form-label']) }}
+                                <div class="col-sm-4">
+                                    {{ Form::text('biometric_id', request()->biometric_id, ['class' => 'form-control selectJS', 'placeholder' => 'Enter Biometric Id']) }}
+                                </div>
+
+                                <div class="col-6">
+                                    <div class="form-group">
+                                        <div class="form-check form-check-primary">
+                                            <label class="form-check-label">Is Power User
+                                                <input type="checkbox" name="is_power_user" @if(request()->is_power_user) checked @endif class="form-check-input">
+                                                <i class="input-helper"></i></label>
+                                        </div>
+                                    </div>
                                 </div>
 
                             </div>
@@ -51,11 +100,11 @@
                                 </div>
                                 @can('hrUpdateEmployee', new App\Models\Employee())
                                     <div class="col-md-6">
-                                     
-                                        
+
+
                                         <a href="{{ route('exportEmployee',request()->query()) }}" class="btn m-2 float-right btn-primary">Export</a>
                                         <a href="{{ route('createEmployee') }}" class="btn m-2 float-right btn-success">Add new
-                                            Record</a>
+                                            Record <i class=""></i></a>
                                     </div>
                                 @endcan
                             </div>
@@ -90,7 +139,8 @@
                                         <th>Name</th>
                                         <th>Email</th>
                                         <th>Department</th>
-                                        <th>Role</th>
+                                        <th>Biometric</th>
+                                        <th>Employee Type</th>
                                         @can('status', new App\Models\Employee())
                                             <th>Status</th>
                                         @endcan
@@ -110,7 +160,8 @@
                                             <td>{{ $employee->name }}</td>
                                             <td>{{ $employee->office_email }}</td>
                                             <td>{{ $employee->department->name ?? null }}</td>
-                                            <td>{{ $employee->user->hasRole('Manager') ? 'Manager' :'Employee'}}</td>
+                                            <td>{{ $employee->biometric_id ?? null }}</td>
+                                            <td>{{ $employee->user->user_type}}</td>
                                             <td>
                                                 @if ($employee->is_active == 1)
                                                     Active
@@ -149,18 +200,25 @@
         function getEmployees(department_id) {
         if (department_id) {
             $.ajax({
-                url: "{{route('getEmployees')}}/" + department_id,
+                url: "{{route('getUsers')}}/" + department_id,
                 type: 'get',
                 dataType: 'json',
                 success: function (response) {
                     var options = `<option value=''></option>`;
-                    $.each(response, function (id, name) {
-                        options += "<option value='" + name + "'>" + name + "</option>";
+                    var option = `<option value=''></option>`;
+
+                    $.each(response, function (data,name,office_email,biometric_id) {
+                        console.log(response[data].user_id);
+                        option += "<option value='" + response[data].user_id + "'>" + response[data].name+'('+response[data].biometric_id+')' + "</option>";
+                        options += "<option value='" + response[data].office_email + "'>" + response[data].office_email + "</option>";
+
                     });
-                
-                    $('#employees').html(options);
+
+                    $('#employees').html(option);
+                    $('#emails').html(options);
                     $("select").select2({
-                        placeholder: "Select an option"
+                        placeholder: "Select an option",
+                        allowClear: true,
                     });
                 }
             })

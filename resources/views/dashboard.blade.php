@@ -49,7 +49,7 @@ background-image:none!important;
                         </div>
                     </div>
                 @endcan
-                @can('hrDashboard', new App\User())
+                {{-- @can('hrDashboard', new App\User())
                     <div class="col-md-3 mb-4 stretch-card transparent">
                         <div class="card card-light-danger">
                           <a style="color: white;" href="{{route('hr.adminList')}}">
@@ -60,7 +60,7 @@ background-image:none!important;
                           </a>
                         </div>
                     </div>
-                @endcan
+                @endcan --}}
                 @can('hrDashboard', new App\User())
                   <div class="col-md-3 mb-4 stretch-card transparent">
                       <div class="card card-dark-blue">
@@ -74,11 +74,29 @@ background-image:none!important;
                   </div>
                 @endcan
 
+                @if(auth()->user()->hasRole('employee'))
+                <div class="col-md-3 mb-4 stretch-card transparent">
+                  <div class="card card-tale">
+                    <a style="color: white;" href="{{route('myAttendance')}}">
+                      <div class="card-body">
+                        <p class="mb-4"><i class="fa fa-user-circle"></i> Punch In Today ({{Carbon\Carbon::now()->format('l')}})</p>
+                        @if(!empty($todayAttendance->punch_in))
+                        <p class="fa-2x mb-2">{{Carbon\Carbon::createFromFormat('H:i:s',$todayAttendance->punch_in)->format('g:i:s A')}}</p>
+                        @else
+                        <p class="fa-2x mb-2">N/A</p>
+                        @endif
+
+                    </div>
+                    </a>
+                </div>
+              </div>
+              @endif
+
                 @can('leaveDashboard', new App\User())
-                    <div class="col-md-3 mb-4 stretch-card transparent" id="leave">
+                    <div class="col-md-3 mb-4 stretch-card transparent" id="today-leave-list">
                         <div class="card card-tale">
                             <div class="card-body">
-                                <p class="mb-4"><i class="mdi mdi-walk"></i> Leaves</p>
+                                <p class="mb-4"><i class="mdi mdi-walk"></i> Employees On Leave</p>
                                 <p class="fa-3x mb-2">{{count($leaveDashboard['leaves'])}}</p>
                             </div>
                           </a>
@@ -213,6 +231,7 @@ background-image:none!important;
                 </div>
                 @endcan
 
+
                 @if(auth()->user()->hasRole('employee'))
                 <div class="col-md-3 mb-4 stretch-card transparent">
                   <div class="card card-light-blue">
@@ -237,6 +256,19 @@ background-image:none!important;
                   </div>
                 </div>
                 @endif
+
+                @can('powerUser', new App\User())
+                  <div class="col-md-3 mb-4 stretch-card transparent">
+                    <div class="card card-dark-blue">
+                      <a style="color: white;" href="{{route('departmentTickets')}}">
+                        <div class="card-body">
+                          <p class="mb-4"><i class="mdi mdi-ticket"></i> Department Tickets </p>
+                          <p class="fa-3x mb-2">{{$departmentTicketCount}}  </p>
+                        </div>
+                      </a>
+                    </div>
+                  </div>
+                @endcan
           </div>
 
 
@@ -424,18 +456,28 @@ background-image:none!important;
                       <tr>
                         <th>#</th>
                         <th>Name</th>
+                        <th>Biometric Id</th>
                         <th>Department</th>
-                        <th>Leave Type</th>
+                        <th>Shift Type</th>
+                        <th>Leave Session</th>
                         <th>Timing</th>
                       </tr>
                     </thead>
                     <tbody id="myTable">
                       @forelse($leaveDashboard['leaves'] as $leave)
-                      <tr>
+                      @php
+                        $color  =   'table-success';
+                        if($leave->status=='Pre Approved'){$color  =   'table-success';}
+                        elseif($leave->status=='Approved'){$color  =   'table-danger';}
+                        elseif($leave->status=='Absent'){$color    =   'table-active';}
+                    @endphp
+                      <tr class="{{$color}}">
                         <td>{{$loop->iteration}}</td>
-                        <td>{{$leave->employee->name ?? 'N/A'}}</td>
-                        <td>{{$leave->employee->department->name ?? 'N/A'}}</td>
-                        <td>{{$leave->leave_type}}</td>
+                        <td>{{$leave->user->employee->name ?? 'N/A'}}</td>
+                        <td>{{$leave->user->employee->biometric_id ?? 'N/A'}}</td>
+                        <td>{{$leave->user->employee->department->name ?? 'N/A'}}</td>
+                        <td>{{ $leave->user->shiftType->name  }}</td>
+                        <td>{{$leave->status!='Absent' ? $leave->leave_session : 'Absent'}}</td>
                         <td>{{getFormatedTime($leave->timing)}}</td>
                       </tr>
                       @empty
@@ -489,11 +531,19 @@ background-image:none!important;
         });
       }
       $('#leave-list').dataTable();
-       $("#leave").click(function(){
-         $('html, body').animate({
+       $("#today-leave-list").click(function(){
+        animateTable();
+    });
+    @if(request()->today_table)
+    animateTable();
+    @endif
+
+    function animateTable()
+    {
+        $('html, body').animate({
              scrollTop: $('#leave-list').offset().top
         }, 'slow');
-    });
+    }
       /* ChartJS
    * -------
    * Data and config for chartjs

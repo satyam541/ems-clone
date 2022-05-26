@@ -24,7 +24,7 @@ class DepartmentController extends Controller
 		$pageIndex 		=  $request->pageIndex;
 		$pageSize 		= $request->pageSize;
 		$departments 	= Department::query();
-		if (!empty($request->get('name'))) 
+		if (!empty($request->get('name')))
 		{
 			$departments 	= $departments->where('name', 'like', '%' . $request->get('name') . '%');
 		}
@@ -39,6 +39,7 @@ class DepartmentController extends Controller
 		$department 				= new Department();
 		$department->name 			= $request->name;
 		$department->description 	= $request->description;
+		$department->short_name     = $request->short_name;
 		$department->save();
 		return json_encode($department);
 	}
@@ -50,6 +51,7 @@ class DepartmentController extends Controller
 		$this->authorize('update', $department);
 		$department->name 			= 	$request->name;
 		$department->description 	= 	$request->description;
+		$department->short_name     = $request->short_name;
 		$department->save();
 		return json_encode($department);
 	}
@@ -122,32 +124,62 @@ class DepartmentController extends Controller
 
 	public function departmentEmployees()
 	{
-		$data['departments'] 			= Department::withCount('employees')->paginate(15);
+		$data['departments'] 			= Department::withCount('employees')->paginate(20);
 		$data['employeeDepartments']  	=  Employee::select('id','name','department_id')->get()->groupBy('department.name');
+
 		return view('department.departmentEmployee', $data);
 	}
 
 	public function managerUpdate(Request $request)
 	{
 		// optional code need to be terminate
+
 		$department     = Department::find($request->departmentId);
-		$roleId			= Role::where('name','manager')->first()->id;
+		$managerRoleId			= Role::where('name','manager')->first()->id;
+		$teamLeaderRoleId			= Role::where('name','Team Leader')->first()->id;
 		if(!empty($request->old_manager))
 		{
 			$currentManager		= Employee::find($request->old_manager);
-			if(count($currentManager->managerDepartments)==1)
+			if(!empty($currentManager) && count($currentManager->managerDepartments)==1)
 			{
-				$currentManager->user->roles()->detach([$roleId]);
+				$currentManager->user->roles()->detach([$managerRoleId]);
 			}
 		}
-		$user 	= Employee::find($request->employee_id)->user;
-		if(!$user->hasRole('manager'))
+		if(!empty($request->old_team_leader))
 		{
-		$user->roles()->attach($roleId);
+			$currentTeamLeader		= Employee::find($request->old_team_leader);
+			if(!empty($currentTeamLeader) && count($currentManager->teamLeaderDepartments)==1)
+			{
+					$currentTeamLeader->user->roles()->detach([$managerRoleId]);
+			}
 		}
-		// new code to be used
+		if(!empty($request->teamleader))
+		{
+            $department->team_leader_id     =   $request->teamleader;
+        }
+		//   dd($request->employee_id);
+		if(!empty($request->manager_id))
+		{
+		$manager 	= Employee::find($request->manager_id)->user;
+		if(!$manager->hasRole('manager'))
+		{
+		$manager->roles()->attach($managerRoleId);
+		}
+	}
+        if(!empty($request->teamleader))
+        {
+		$teamLeader 	= Employee::find($request->teamleader)->user;
+        if(!$teamLeader->hasRole('Team Leader'))
+		{
+		  $teamLeader->roles()->attach($teamLeaderRoleId);
+		}
+        }
 		
-		$department->manager_id	= $request->employee_id;
+
+		// new code to be used
+
+		$department->manager_id	= $request->manager_id;
+
 		$department->save();
 		return 'done';
 	}

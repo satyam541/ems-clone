@@ -2,10 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Builder;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 // use App\Traits\Encryptable;
 
 class Employee extends Model
@@ -18,8 +19,10 @@ class Employee extends Model
     // protected $encryptable = [ "phone","personal_email","birth_date","pf_no"];
     // protected $appends =['department_name'];
     public $image_path = "upload/employeeimage/";
+    public $image_id_card_path = "storage/app/documents/employee/";
+
     public $additional_attributes =['pending_fields'];
-   
+
 
     protected static function boot()
     {
@@ -27,11 +30,11 @@ class Employee extends Model
         static::addGlobalScope('is_active', function (Builder $builder) {
             $builder->where('employee.is_active', '=', 1);
         });
-        static::addGlobalScope('guest', function (Builder $builder) {
-            $builder->where('employee.is_active', '=', 1)->whereHas('user.roles',function($query){
-                $query->where('name','<>','Guest');
-            });
-        });
+        // static::addGlobalScope('guest', function (Builder $builder) {
+        //     $builder->where('employee.is_active', '=', 1)->whereHas('user.roles',function($query){
+        //         $query->where('name','<>','Guest');
+        //     });
+        // });
     }
     public function toArray()
     {
@@ -43,7 +46,7 @@ class Employee extends Model
     }
     public function user()
     {
-        return $this->belongsTo('App\User', 'user_id');
+        return $this->belongsTo('App\User', 'user_id')->withoutGlobalScopes();
     }
     public function attendances()
     {
@@ -57,6 +60,10 @@ class Employee extends Model
     {
         return $this->hasMany('App\Models\Department','manager_id','id');
     }
+    public function teamLeaderDepartments()
+    {
+        return $this->hasMany('App\Models\Department','team_leader_id','id');
+    }
     public function profileReminder()
     {
         return $this->hasMany('App\Models\PendingProfileReminder');
@@ -66,7 +73,7 @@ class Employee extends Model
      */
     // public function getTotalAbsentAttribute()
     // {
-      
+
     //  $this->attendances()->whereYear('attendance_date',Carbon::now()->year)->whereMonth('attendance_date',Carbon::now()->month)->where('status','absent')->count();
     // }
 
@@ -80,14 +87,14 @@ class Employee extends Model
         return $this->hasMany('App\Models\ItemRequestAssign','assigned_to');
     }
 
-    public function tickets()
-    {
-        return $this->hasMany('App\Models\Ticket','employee_id');
-    }
+    // public function tickets()
+    // {
+    //     return $this->hasMany('App\Models\Ticket','employee_id');
+    // }
 
     // public function getTotalPresentAttribute()
     // {
-      
+
     //     return $this->attendances->where('attendance_date',Carbon::now()->year)->where('attendance_date',Carbon::now()->month)->where('status','present')->count();
     // }
     public function qualification()
@@ -101,16 +108,16 @@ class Employee extends Model
         if ($this->hasImage()) {
             return $imageLink;
         } else {
-          
+
              return url('/img/user.jpg');
         }
     }
 
     public function hasImage()
     {
-        
+
         if(empty($this->profile_pic)) return FALSE;
-        if (file_exists(public_path($this->image_path.$this->profile_pic))) 
+        if (file_exists(public_path($this->image_path.$this->profile_pic)))
         {
             return TRUE;
         }
@@ -126,7 +133,7 @@ class Employee extends Model
         return $this->hasOne('App\Models\BankDetail','employee_id');
     }
     public function activity()
-    {  
+    {
        return  $this->morphOne('App\Models\ActivityLog','module');
     }
     public function designation()
@@ -149,24 +156,28 @@ class Employee extends Model
     public function getImageSourceAttribute() {
         return $this->getImagePath();
     }
- 
+
     public function draftProfiles()
     {
         return $this->hasMany('App\Models\EmployeeProfileDraft');
     }
 
+    // public function shiftType()
+    // {
+    //     return $this->belongsTo(ShiftType::class,'shift_type_id','id');
+    // }
 
     public function getPendingFieldsAttribute()
     {
-      
-        
+
+
        if(!empty($this->documents))
        {
         $attributes = $this->documents->getAttributes();
         $pending    = [];
         foreach($attributes as $key=>$value)
         {
-                // 
+                //
                 if(in_array($key, ['pan_number', 'pan_file', 'deleted_at']) )
                 {
                 continue;
@@ -176,8 +187,8 @@ class Employee extends Model
 
                 $pending[]= ucwords(str_replace('_', ' ', $key));
                 }
-            
-            
+
+
         }
         if(empty($this->profile_pic))
         {
@@ -189,10 +200,10 @@ class Employee extends Model
         }
         $pending=implode(',',$pending);
         return $pending;
-       
+
       }
        return "All details Pending";
-     
+
     }
 
     public function employeeExitDetail()
@@ -206,7 +217,7 @@ class Employee extends Model
     }
 
     public function equipmentAssigned()
-    {   
+    {
         return $this->hasMany('App\Models\EquipmentAssign','assigned_to','id');
     }
 
@@ -220,13 +231,40 @@ class Employee extends Model
         return null;
     }
 
-    public function workReports()
-    {
-        return $this->hasMany('App\Models\DailyReport', 'employee_id');
-    }
+    
 
     public function leaves()
     {
         return $this->hasMany('App\Models\Leave', 'employee_id');
+    }
+
+    public function getShiftAttribute($value)
+    {
+        $start_time=Carbon::createFromFormat('H:i:s',$this->user->shiftType->start_time)->format('g:i A');
+        $end_time=Carbon::createFromFormat('H:i:s',$this->user->shiftType->end_time)->format('g:i A');
+        return  strtoupper($this->user->shiftType->name."(".$start_time."-".$end_time.")");
+    }
+
+    public function getIdCardPath()
+    {
+        $imageLink =    url($this->image_id_card_path.$this->id."/".$this->id_card_photo);
+        // dd($imageLink);
+        if ($this->hasIdCard()) {
+            return $imageLink;
+        } else {
+            
+            return url('/img/user.jpg');
+        }
+    }
+    
+    public function hasIdCard()
+    {
+        
+        if(empty($this->id_card_photo)) return FALSE;
+        if (storage_path($this->image_id_card_path.$this->id."/".$this->id_card_photo))
+        {
+            return TRUE;
+        }
+        return FALSE;
     }
 }

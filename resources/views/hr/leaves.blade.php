@@ -51,14 +51,15 @@
 
                                 <thead>
                                     <tr>
-                                        <th>Leave Nature</th>
+                                        <th>Leave Session</th>
                                         <th>Leave Type</th>
                                         <th>Department</th>
                                         <th>Employee</th>
+                                        <th>Applied At</th>
                                         <th>From Date</th>
                                         <th>To Date</th>
                                         <th>Duration</th>
-                                        <th>Timings</th>
+                                        <th>Status</th>
 
                                     </tr>
                                 </thead>
@@ -72,18 +73,20 @@
                                     @else
                                     @foreach ($leaves as $leave)
                                     <tr class="border-top">
-                                        <td>{{ $leave->leave_nature }}</td>
-                                        <td>{{ $leave->leave_type }}</td>
-                                        <td>{{ $leave->employee->department->name }}</td>
-                                        <td>{{ $leave->employee->name }}</td>
+                                        <td>{{ $leave->leave_session }}</td>
+                                        <td>{{ $leave->leaveType->name }}</td>
+                                        <td>{{ $leave->user->employee->department->name }}</td>
+                                        <td>{{ $leave->user->name }}</td>
+                                        <td>{{getFormatedDate($leave->created_at)}}</td>
                                         <td>{{ getFormatedDate($leave->from_date) }}</td>
                                         <td>{{ getFormatedDate($leave->to_date) }}</td>
                                         <td>{{ $leave->duration }} {{ Str::plural('Day', $leave->duration) }}</td>
-                                        <td>{{ $leave->timing }}</td>
+
+                                        <td>{{ $leave->status }}</td>
 
                                     </tr>
                                     <tr>
-                                        @if (is_null($leave->is_approved))
+                                        {{-- @if (is_null($leave->is_approved)) --}}
                                         <td colspan='8'>
                                             {{ Form::open(['class' => 'd-flex']) }}
                                             {{ Form::hidden('id', $leave->id) }}
@@ -105,19 +108,21 @@
                                                 {{ Form::label('remarks', 'Remarks', ['class' => 'font-weight-bold']) }}
                                                 {{ Form::textarea('remarks', null, ['rows' => '1', 'cols' => '20', 'class' => 'form-control remarks-field']) }}
                                             </div>
-
+                                            @if (is_null($leave->is_approved))
                                             <div class="col-2 action">
                                                 <br>
-                                                <button type="submit" value="approve"
+                                                <button type="submit" value="Approved"
                                                     class="btn btn-primary btn-rounded m-3 leave-action">Approve</button>
                                                 <button type="submit" value="reject"
                                                     class="btn btn-danger btn-rounded m-3 leave-action">Reject</button>
 
                                             </div>
+                                            @endif
+
 
                                             {{ Form::close() }}
                                         </td>
-                                        @else
+                                        {{-- @else
                                         <td colspan='8'>
                                             {{ Form::model($leave, ['route' => $submitRoute, 'class' => 'forms-sample d-flex']) }}
                                             <div class="col-2">
@@ -126,7 +131,7 @@
                                             </div>
                                             <div class="col-2">
                                                 <label class="font-weight-bold">Current Leave Type</label><br>
-                                                {{ Form::select('leave_type', $leaveTypes, $leave->leave_type, ['placeholder' => 'select an option', 'class' => 'selectJS form-control']) }}
+                                                {{ Form::select('leave_session', $leaveTypes, $leave->leave_session, ['placeholder' => 'select an option', 'class' => 'selectJS form-control']) }}
                                             </div>
                                             {{ Form::hidden('action') }}
                                             {{ Form::hidden('id', $leave->id) }}
@@ -153,7 +158,7 @@
                                             </div>
                                             {{ Form::close() }}
                                         </td>
-                                        @endif
+                                        @endif --}}
                                     </tr>
                                     @endforeach
                                     @endif
@@ -167,7 +172,7 @@
                     </div>
                     </div>
                 </div>
-                
+
             </div>
         </div>
     </div>

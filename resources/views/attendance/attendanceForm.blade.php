@@ -20,7 +20,7 @@
                             <div class="mb-2">
                                 <h4 class="card-title">Attendance ({{getFormatedDate($min)}})</h4>
                             </div>
-                            @if(empty($leave) || $leave->leave_type != 'Full day')
+                            @if(empty($leave) || $leave->leave_session != 'Full day')
                             
                             <form method="post" action="{{route('submitAttendance')}}">
                                 @csrf
@@ -41,8 +41,8 @@
                                             <td class="text-right">{{ $employee->department->name }}</td>
                                         </tr>
                                         <tr>
-                                            <th>Nature</th>
-                                            <td class="text-right">{{ optional($employee->leaves)->first()->leave_type ?? 'Present' }}</td>
+                                            <th>Session</th>
+                                            <td class="text-right">{{ optional($employee->leaves)->first()->leave_session ?? 'Present' }}</td>
                                         </tr>
                                         @if(!empty($id))
                                         <tr>
@@ -70,7 +70,7 @@
                                 </table>
                             </div>
                                         
-                                @if(empty($leave) || $leave->leave_type != 'Full day')
+                                @if(empty($leave) || $leave->leave_session != 'Full day')
                                 @if(empty($employee->attendances->first()->punch_out))
                                     <div class="text-center">
                                         <button class="btn btn-primary">{{$action}}</button>

@@ -51,13 +51,16 @@
                     </div>
 
                     <div class="row">
-                        <div class="col-md-6">
+                        <div class="col-md-8">
                             {{ Form::submit('Filter', ['class' => 'btn btn-primary']) }}
                             <a href="{{ request()->url() }}" class="btn btn-success">Clear Filter</a>
                             {{ Form::close() }}
                         </div>
-                        <div class="col-md-6 float-right">
-                            <a href="{{route('dailyReport.exportDailyReport',request()->query())}}" class="btn btn-danger float-right">Download</a>
+                        <div class="col-md-4 text-right">
+                            {{-- @if(in_array(strtolower(auth()->user()->email), App\User::$developers))
+                            <a href="{{route('sendReportMail',request()->query())}}" class="btn btn-primary">Send Mail</a>
+                             @endif --}}
+                            <a href="{{route('dailyReport.exportDailyReport',request()->query())}}" class="btn btn-danger">Download</a>
                            
                         </div>
                     </div>
@@ -85,7 +88,7 @@
                                 <tr>
                                     <th>Employee</th>
                                     <th>Department</th>
-                                    <th>Leave Nature</th>
+                                    <th>Leave Session</th>
                                     <th>Task 1</th>
                                     <th>Task 2</th>
                                     <th>Task 3</th>
@@ -95,24 +98,24 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @if ($employees->isEmpty())
+                                @if ($users->isEmpty())
                                 <tr>
                                     <td colspan="8">
                                         <marquee behavior="alternate" direction="right"> No data available</marquee>
                                     </td>
                                 </tr>
                                 @else
-                                @foreach ($employees as $employee)
+                                @foreach ($users as $user)
                                     <tr>
-                                        <td>{{ $employee->name }}</td>
-                                        <td>{{ $employee->department->name }}</td>
-                                        <td>{{ optional($employee->leaves)->first()->leave_type ?? 'Present'}}</td>
-                                        <td style="white-space: normal;">{{ optional($employee->workReports)->first()->task1 ?? '' }}</td>
-                                        <td style="white-space: normal;">{{ optional($employee->workReports)->first()->task2 ?? '' }}</td>
-                                        <td style="white-space: normal;">{{ optional($employee->workReports)->first()->task3 ?? '' }}</td>
-                                        <td style="white-space: normal;">{{ optional($employee->workReports)->first()->task4 ?? '' }}</td>
-                                        <td style="white-space: normal;">{{ optional($employee->workReports)->first()->task5 ?? '' }}</td>
-                                        <td style="white-space: normal;">{{ optional($employee->workReports)->first()->task6 ?? '' }}</td>
+                                        <td>{{ $user->name }}</td>
+                                        <td>{{ $user->employee->department->name }}</td>
+                                        <td>{{ optional($user->leaves)->first()->leave_session ?? 'Present'}}</td>
+                                        <td style="white-space: normal;">{{ optional($user->workReports)->first()->task1 ?? '' }}</td>
+                                        <td style="white-space: normal;">{{ optional($user->workReports)->first()->task2 ?? '' }}</td>
+                                        <td style="white-space: normal;">{{ optional($user->workReports)->first()->task3 ?? '' }}</td>
+                                        <td style="white-space: normal;">{{ optional($user->workReports)->first()->task4 ?? '' }}</td>
+                                        <td style="white-space: normal;">{{ optional($user->workReports)->first()->task5 ?? '' }}</td>
+                                        <td style="white-space: normal;">{{ optional($user->workReports)->first()->task6 ?? '' }}</td>
                                     </tr>
                                 @endforeach
                                 @endif
@@ -121,11 +124,11 @@
                     </div>
                     <div class="row mt-2">
                         <div class="col-sm-6 float-left">
-                           <strong>Total Results: </strong> {{$employees->total()}}
+                           <strong>Total Results: </strong> {{$users->total()}}
                         </div>
                         <div class="col-sm-6">
                             <div class="float-right">
-                                {{$employees->appends(request()->query())->links()}}
+                                {{$users->appends(request()->query())->links()}}
                             </div>
                             
                         </div>

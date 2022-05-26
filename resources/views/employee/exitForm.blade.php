@@ -37,7 +37,7 @@
                             <div class="form-group row">
                                 {{ Form::label('employee_id', 'Select Employee', ['class' => 'col-sm-3 col-form-label']) }}
                                 <div class="col-sm-9">
-                                    {{ Form::select('employee_id', [], null, ['id' => 'employees','onchange'=>'getEmployeeDetail(this.value)','class' => 'form-control selectJS', 'placeholder' => 'Choose one']) }}
+                                    {{ Form::select('employee_id',$employees, null, ['id' => 'employees','onchange'=>'getEmployeeDetail(this.value)','class' => 'form-control selectJS', 'placeholder' => 'Choose one']) }}
                                     @error('employee_id')
                                         <span class="text-danger">{{ $message }}</span>
                                     @enderror

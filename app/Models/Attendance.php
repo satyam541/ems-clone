@@ -2,40 +2,47 @@
 
 namespace App\Models;
 
+use App\User;
+use Carbon\Carbon;
+use App\Models\ShiftType;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Builder;
-
 
 class Attendance extends Model
 {
-    protected $table='attendance';
-    use SoftDeletes;
+    protected $table='employee_attendance';
     protected $guarded = ['id'];
- 
-    
+    protected $append = ['total_late'];
 
-    protected static function boot()
+
+    public function user()
     {
-        parent::boot();
-        static::addGlobalScope('employee', function (Builder $builder) {
-            $builder->has('employee');
-        });
-        static::addGlobalScope('attendance_month',function(Builder $builder){
-            $builder->selectRaw("*,MONTH(attendance_date) as attendance_month");
-        });
-      
+        return $this->belongsTo(User::class);
     }
 
-    public function employee()
+    public function addedBy()
     {
-        return $this->belongsTo('App\Models\Employee','employee_id','id');
-    }
-    
-    public function activity()
-    {  
-       return  $this->morphOne('App\Models\ActivityLog','module');
+        return $this->belongsTo(User::class, 'added_by', 'id');
     }
 
-   
+    public function shiftType()
+    {
+        return $this->belongsTo(ShiftType::class, 'shift_type_id');
+    }
+
+    public function getTotalLateAttribute()
+    {
+        $shiftTime      =   strtotime($this->user->shiftType->start_time);
+        $startTime  =   Carbon::createFromFormat('H:i:s',$this->user->shiftType->start_time);
+        $end = Carbon::createFromFormat('H:i:s',$this->punch_in);
+        $totalDuration = $end->diffInSeconds($startTime);
+        $difference        =    gmdate('H:i:s', $totalDuration);
+        $minutes           =    date('i', strtotime($difference));
+        return $minutes;
+    }
+
+
+
+
 }

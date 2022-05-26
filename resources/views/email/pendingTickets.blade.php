@@ -32,8 +32,8 @@
                     @foreach($pendingTickets as $ticket)
 
                     <tr style="background-color: #e4f2f5; padding: 12px; color: black; font-size: 16px; width: 100%;">
-                        <td style="padding: 12px">{{$ticket->employee->name}}</td>
-                        <td style="padding: 12px">{{$ticket->employee->department->name}}</td>
+                        <td style="padding: 12px">{{$ticket->employee->name ?? null }}</td>
+                        <td style="padding: 12px">{{$ticket->employee->department->name ?? null }}</td>
                         <td style="padding: 12px">{{$ticket->issue_type}}</td>
                         <td style="padding: 12px">{{$ticket->priority}} </td>
                         <td style="padding: 12px">{{getFormatedDateTime($ticket->created_at)}}</td>

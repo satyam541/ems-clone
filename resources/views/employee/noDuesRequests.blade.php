@@ -57,7 +57,7 @@
                                             {{ Form::open(['route' => ['noDuesSubmit', $employee->id], 'class' => 'd-flex']) }}
                                                 <div class="col-md-3">
                                                     <p>Manager</p>
-    
+
                                                     @if (empty($employee->employeeExitDetail->dept_no_due) && Auth::user()->can('managerNoDuesApprover', new App\Models\Employee()))
                                                         {{ Form::select('dept_no_due', $actions, $employee->employeeExitDetail->dept_no_due ?? null, ['class' => 'selectJS form-control']) }}
                                                     @else
@@ -78,9 +78,12 @@
 
                                                 <div class="col-md-3">
                                                     <p class="label">HR Department</p>
-                                                       
-                                                    @if (empty($employee->employeeExitDetail->hr_no_due) && Auth::user()->can('hrNoDuesApprover', new App\Models\Employee()) && !empty($employee->employeeExitDetail->it_no_due) && !empty($employee->employeeExitDetail->dept_no_due))
+
+                                                    @if (empty($employee->employeeExitDetail->hr_no_due) && Auth::user()->can('hrNoDuesApprover', new App\Models\Employee()) && !empty($employee->employeeExitDetail->it_no_due)
+                                                     && !empty($employee->employeeExitDetail->dept_no_due))
                                                         {{ Form::select('hr_no_due', $actions, $employee->employeeExitDetail->hr_no_due ?? null, ['class' => 'selectJS form-control']) }}
+                                                    @elseif($employee->user->user_type=="Office Junior")
+                                                    {{ Form::select('hr_no_due', $actions, $employee->employeeExitDetail->hr_no_due ?? null, ['class' => 'selectJS form-control']) }}
                                                     @else
                                                         {{ Form::select('hr_no_due', $actions, $employee->employeeExitDetail->hr_no_due ?? null, ['class' => 'selectJS form-control', 'disabled' => true]) }}
                                                     @endif

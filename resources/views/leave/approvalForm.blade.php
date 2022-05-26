@@ -40,7 +40,7 @@
                         <div class="form-group row">
                             {{ Form::label('name', 'Name', ['class' => 'col-sm-3 col-form-label']) }}
                             <div class="col-sm-9">
-                                {{ Form::text('name', $leave->employee->user->name ?? '', ['class' => 'form-control', 'disabled' => 'disabled']) }}
+                                {{ Form::text('name', $leave->user->name ?? '', ['class' => 'form-control', 'disabled' => 'disabled']) }}
                             </div>
                         </div>
                     </div>
@@ -49,7 +49,7 @@
                         <div class="form-group row">
                             {{ Form::label('department', 'Department', ['class' => 'col-sm-3 col-form-label']) }}
                             <div class="col-sm-9">
-                                {{ Form::text('department', $leave->employee->department->name ?? '', ['class' => 'form-control', 'disabled' => 'disabled']) }}
+                                {{ Form::text('department', $leave->user->employee->department->name ?? '', ['class' => 'form-control', 'disabled' => 'disabled']) }}
 
                             </div>
                         </div>

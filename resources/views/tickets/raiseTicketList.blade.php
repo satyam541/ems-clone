@@ -45,7 +45,7 @@
                                     <button  type="button" class="btn btn-sm" style="background-color: #eaeaea"  name="daterange" id="date-btn" value="Select Date">
                                         @if(!empty(request()->dateFrom) && !empty(request()->dateTo))
                                         <span>
-                                        {{ Carbon\Carbon::parse(request()->get('dateFrom'))->format('d/m/Y')}} - {{ Carbon\Carbon::parse(request()->get('dateTo'))->format('d/m/Y')}} 
+                                        {{ Carbon\Carbon::parse(request()->get('dateFrom'))->format('d/m/Y')}} - {{ Carbon\Carbon::parse(request()->get('dateTo'))->format('d/m/Y')}}
                                         </span>
                                         @else
                                             <span>
@@ -54,7 +54,7 @@
                                         @endif
                                         <i class="fa fa-caret-down"></i>
                                     </button>
-                                   
+
                                     {{Form::hidden('dateTo', request()->dateTo ?? null, array('id'=>'dateTo'))}}
                                     {{Form::hidden('dateFrom',request()->dateFrom ?? null, array('id'=>'dateFrom'))}}
 
@@ -95,15 +95,15 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @php $departmentName='' @endphp;
+                                        @php $departmentName='' @endphp
                                         @forelse($tickets as $ticket)
-                                            @if(!empty($ticket->employee))
-                                            @php $departmentName=$ticket->employee->department->name @endphp
+                                            @if(!empty($ticket->user))
+                                            @php $departmentName=$ticket->user->employee->department->name @endphp
                                             @endif
-                                            <tr>                           
+                                            <tr>
                                                 <td style="white-space: normal;">{{$ticket->id}}</td>
-                                                
-                                                <td style="white-space: normal;">{{$ticket->employee->name ?? ''.' ('.$departmentName.')'}}</td>
+
+                                                <td style="white-space: normal;">{{$ticket->user->name ?? ''.' ('.$departmentName.')'}}</td>
                                                 <td style="white-space: normal;">{{ucfirst($ticket->ticketCategory->type ?? '')}}</td>
                                                 <td style="white-space: normal;">{{ucfirst($ticket->ticketCategory->name ?? '')}}</td>
                                                 <td style="white-space: normal;">{{$ticket->subject}}</td>
@@ -154,8 +154,8 @@
                     <div class="form-group row">
                         {{ Form::label('assigned_to', 'Assign To:', ['class' => 'col-sm-3 col-form-label']) }}
                         <select name="assigned_to" required class="col-md-5 form-control selectJS" placeholder="Select an Employee">
-                            @foreach($employees as $employee)
-                            <option value="{{$employee->id}}">{{$employee->name}} ({{$employee->department->name}})</option>
+                            @foreach($users as $user)
+                            <option value="{{$user->id}}">{{$user->name}} ({{$user->employee->department->name}})</option>
                             @endforeach
                         </select>
                     </div>
@@ -191,10 +191,10 @@
         },
         function (start, end) {
             $('#date-btn span').html(start.format('D/ M/ YY') + ' - ' + end.format('D/ M/ YY'))
-          
+
             $('#dateTo').val(start.format('YYYY-M-DD'));
             $('#dateFrom').val(end.format('YYYY-M-DD'));
-        
+
         }
     );
     $('#date-btn').on('cancel.daterangepicker', function(ev, picker) {

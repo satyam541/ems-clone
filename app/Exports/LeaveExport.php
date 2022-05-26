@@ -39,9 +39,9 @@ class LeaveExport implements FromCollection,WithHeadings,WithMapping
         {
            $leaves    =$leaves->where('leave_nature',request()->leave_nature);
         }
-        if(request()->has('leave_type'))
+        if(request()->has('leave_session'))
         {
-           $leaves    =$leaves->where('leave_type',request()->leave_type);
+           $leaves    =$leaves->where('leave_session',request()->leave_session);
         }
         if(request()->has('employee_id'))
         {
@@ -67,8 +67,8 @@ class LeaveExport implements FromCollection,WithHeadings,WithMapping
             getFormatedDate($leave->to_date),
             optional($leave->employee)->department->name ?? "",
             optional($leave->employee)->name,
-            $leave->leave_nature,
-            $leave->leave_type,
+            $leave->leaveType->name,
+            $leave->leave_session,
             $leave->reason,
             $leave->status
             
@@ -80,13 +80,10 @@ class LeaveExport implements FromCollection,WithHeadings,WithMapping
                 'To Date',
                 'Department',
                 'Name',
-                'Leave Nature',
                 'Leave Type',
+                'Leave Session',
                 'Reason',
                 'Status',
-                
-           
-        
         ];
     }
 }

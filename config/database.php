@@ -80,16 +80,17 @@ return [
 
         'sqlsrv' => [
             'driver' => 'sqlsrv',
-            'url' => env('DATABASE_URL'),
-            'host' => env('DB_HOST', 'localhost'),
-            'port' => env('DB_PORT', '1433'),
-            'database' => env('DB_DATABASE', 'forge'),
-            'username' => env('DB_USERNAME', 'forge'),
-            'password' => env('DB_PASSWORD', ''),
+            'url' => '',
+            'host' => '10.128.192.82',
+            'port' => '1433',
+            'database' => 'knowledge',
+            'username' => 'etime',
+            'password' =>  'etime',
             'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
-        ],
+            'trust_server_certificate' => true,
+],
 
     ],
 

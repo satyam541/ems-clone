@@ -25,7 +25,7 @@
                         <div class="form-group row">
                             {{Form::label('name','Employee Name', ['class' => 'col-sm-3 col-form-label']) }}
                             <div class="col-sm-9">
-                                {{Form::text('name',null,['class'=>'form-control','id'=>'name','placeholder'=>'Employee Name', 'readonly'=>'readOnly'])}}
+                                {{Form::text('name',null,['class'=>'form-control','id'=>'name','placeholder'=>'Employee Name'])}}
 
                                 @error('name')
                                 <span class="text-danger">{{$message}}</span>
@@ -100,7 +100,7 @@
                             <div class="col-sm-9">
                                 <img class="mr-3" src="{{ $employee->getImagePath() }}" width="70" height="70">
                                 @if(!empty($employee->profile_pic))
-                                {{Form::File('profile_pic',['accept'=>'image/jpeg,image,jpg,image/png','disabled'=>draft_check($employee->id,'profile_pic')])}}
+                                {{Form::File('profile_pic',['accept'=>'image/jpeg,image,jpg,image/png','disabled'=>draft_profile_check($employee->id,'profile_pic')])}}
                                 @else
                                 {{Form::File('profile_pic',['accept'=>'image/jpeg,image,jpg,image/png','disabled'=>draft_check($employee->id,'profile_pic'), 'required' => 'required'])}}
                                 @endif
@@ -110,7 +110,7 @@
                                 @error('profile_pic')
                                     <span class="text-danger">{{$message}}</span>
                                 @enderror
-                                
+
                             </div>
                         </div>
                     </div>
@@ -137,15 +137,15 @@
                                     @if(!empty($employee->documents->aadhaar_file))
                                     {{Form::file('aadhaar_file',['class'=>'form-control','disabled'=>draft_check($employee->id,'aadhaar_file')])}}
                                     @else
-                                    {{Form::file('aadhaar_file',['class'=>'form-control','disabled'=>draft_check($employee->id,'aadhaar_file'), 'required' => 'required'])}} 
+                                    {{Form::file('aadhaar_file',['class'=>'form-control','disabled'=>draft_check($employee->id,'aadhaar_file'), 'required' => 'required'])}}
                                     @endif
                                 </div>
                                 @if (!empty($employee->documents->aadhaar_file))
-                                <div class="col-3 float-right text-right">                              
+                                <div class="col-3 float-right text-right">
                                     <a target="_blank" href="{{route('downloadDocument', ['employee' => $employee->id, 'reference' => $employee->documents->aadhaar_file])}}">
                                         <i class="fa fa-eye text-primary"></i>
-                                    </a> 
-                                </div> 
+                                    </a>
+                                </div>
                                 @endif
                                 @if(draft_check($employee->id,'aadhaar_file'))
                                 <p style="color:red;"> Sent for Approval</p>
@@ -180,11 +180,11 @@
                                     {{Form::file('pan_file',['class'=>'form-control','accept'=>'pdf','disabled'=>draft_check($employee->id,'pan_file')])}}
                                 </div>
                                 @if (!empty($employee->documents->pan_file))
-                                <div class="col-3 float-right text-right">                              
+                                <div class="col-3 float-right text-right">
                                     <a target="_blank" href="{{route('downloadDocument', ['employee' => $employee->id, 'reference' => $employee->documents->pan_file])}}">
                                         <i class="fa fa-eye text-primary"></i>
-                                    </a> 
-                                </div> 
+                                    </a>
+                                </div>
                                 @endif
                                 @if(draft_check($employee->id,'pan_file'))
                                 <p style="color:red;"> Sent for Approval</p>
@@ -215,7 +215,7 @@
                         <div class="form-group row">
                             {{Form::label('cv','CV Upload', ['class' => 'col-sm-3 col-form-label']) }}
                             <div class="col-sm-9">
-                                <div class="col-9 float-left"> 
+                                <div class="col-9 float-left">
                                     @if(!empty($employee->documents->cv))
                                     {{Form::file('cv',['class'=>'form-control','accept'=>'pdf','disabled'=>draft_check($employee->id,'cv')])}}
                                     @else
@@ -223,11 +223,11 @@
                                     @endif
                                 </div>
                                 @if (!empty($employee->documents->cv))
-                                <div class="col-3 float-right text-right">                              
+                                <div class="col-3 float-right text-right">
                                     <a target="_blank" href="{{route('downloadDocument', ['employee' => $employee->id, 'reference' => $employee->documents->cv])}}">
                                         <i class="fa fa-eye text-primary"></i>
-                                    </a> 
-                                </div> 
+                                    </a>
+                                </div>
                                 @endif
                                 @if(draft_check($employee->id,'cv'))
                                 <p style="color:red;"> Sent for Approval</p>
@@ -238,6 +238,7 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="col-md-6">
                         <div class="form-group row">
                             {{ Form::label('contract_date', 'Contract Sign Date', ['class' => 'col-sm-3 col-form-label']) }}
@@ -250,18 +251,136 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="col-md-6">
+
+                        <div class="form-group row">
+                            {{Form::label('passport','Passport', ['class' => 'col-sm-3 col-form-label']) }}
+                            <div class="col-sm-9">
+                                <div class="col-9 float-left">
+                                    @if(!empty($employee->documents->passport))
+                                    {{Form::file('passport',['class'=>'form-control','accept'=>'pdf','disabled'=>draft_check($employee->id,'passport')])}}
+                                    @else
+                                    {{Form::file('passport',['class'=>'form-control','accept'=>'pdf','disabled'=>draft_check($employee->id,'passport')])}}
+                                    @endif
+                                </div>
+                                @if (!empty($employee->documents->passport))
+                                <div class="col-3 float-right text-right">
+                                    <a target="_blank" href="{{route('downloadDocument', ['employee' => $employee->id, 'reference' => $employee->documents->passport])}}">
+                                        <i class="fa fa-eye text-primary"></i>
+                                    </a>
+                                </div>
+                                @endif
+                                @if(draft_check($employee->id,'passport'))
+                                <p style="color:red;"> Sent for Approval</p>
+                                @endif
+                                @error('passport')
+                                    <span class="text-danger">{{$message}}</span>
+                                @enderror
+                            </div>
+                        </div>
+
+                    </div>
                     <div class="col-md-6">
                         <div class="form-group row">
-                            {{ Form::label('tka_email', 'TKA Email', ['class' => 'col-sm-3 col-form-label']) }}
+                            {{ Form::label('office_email', 'TKA Email', ['class' => 'col-sm-3 col-form-label']) }}
                             <div class="col-sm-9">
-                                {{ Form::email('tka_email', $employee->tka_email, ['class' => 'form-control', 'placeholder' => 'Enter TKA Email']) }}
+                                {{ Form::email('office_email', $employee->office_email, ['class' => 'form-control', 'placeholder' => 'Enter TKA Email']) }}
 
-                                @error('tka_email')
+                                @error('office_email')
                                     <span class="text-danger">{{ $message }}</span>
                                 @enderror
                             </div>
                         </div>
                     </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group row">
+                            {{ Form::label('biometric_id', 'Biometric Id', ['class' => 'col-sm-3 col-form-label']) }}
+                            <div class="col-sm-9">
+                                {{ Form::text('biometric_id', null, ['class' => 'form-control', 'placeholder' => 'Biometric Id','readonly'=>'readonly']) }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group row">
+                            {{ Form::label('shift_type_id', 'Shift Type', ['class' => 'col-sm-3 col-form-label']) }}
+                            <div class="col-sm-9">
+                                {{ Form::text('shift_type_id',$employee->Shift, ['class' => 'form-control selectJS','placeholder' =>'Select Shift Type' , 'data-placeholder'=>'Select Shift Type','readonly'=>'readonly']) }}
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group row">
+                            {{ Form::label('gender', 'Gender',['class' => 'col-sm-3 col-form-label']) }}
+                            <div class="mt-3 ml-4">
+                                {!! Form::radio('gender', 'Male', !empty($employee->gender) && $employee->gender == 'Male' ? 1 : null, ['class' => 'mr-1']) !!}
+                                <label class="mr-5">Male</label>
+                                {!! Form::radio('gender', 'Female', !empty($employee->gender) && $employee->gender == 'Female' ? 1 : null, ['class' => 'mr-1']) !!}
+                                <label class="mr-5">Female</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group row">
+                            {{Form::label('asset_policy','Asset Policy', ['class' => 'col-sm-3 col-form-label']) }}
+                            <div class="col-sm-9">
+                                <div class="col-9 float-left">
+                                    @if(!empty($employee->documents->asset_policy))
+                                    {{Form::file('asset_policy',['accept'=>'pdf','disabled'=>draft_check($employee->id,'asset_policy')])}}
+                                    @else
+                                    {{Form::file('asset_policy',['accept'=>'pdf','disabled'=>draft_check($employee->id,'asset_policy')])}}
+                                    @endif
+                                </div>
+                                @if (!empty($employee->documents->asset_policy))
+                                <div class="col-3 float-right text-right">
+                                    <a target="_blank" href="{{route('downloadDocument', ['employee' => $employee->id, 'reference' => $employee->documents->asset_policy])}}">
+                                        <i class="fa fa-eye text-primary"></i>
+                                    </a>
+                                </div>
+                                @endif
+                                @if(draft_check($employee->id,'asset_policy'))
+                                <p style="color:red;"> Sent for Approval</p>
+                                @endif
+                                @error('asset_policy')
+                                    <span class="text-danger">{{$message}}</span>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="form-group row">
+                            {{Form::label('id_card_photo','Upload Id Card Photo', ['class' => 'col-sm-3 col-form-label']) }}
+                            <div class="col-sm-9">
+                                <div class="col-9 float-left">
+                                    @if(!empty($employee->id_card_photo))
+                                    {{Form::file('id_card_photo',['accept'=>'image/jpeg,image,jpg,image/png'])}}
+                                    @else
+                                    {{Form::file('id_card_photo',['accept'=>'image/jpeg,image,jpg,image/png'])}}
+                                    @endif
+                                </div>
+                                @if (!empty($employee->id_card_photo))
+                                <div class="col-3 float-right text-right">
+                                    <a target="_blank" href="{{route('downloadDocument', ['employee' => $employee->id, 'reference' => $employee->id_card_photo])}}">
+                                        <i class="fa fa-eye text-primary"></i>
+                                    </a>
+                                </div>
+                                @endif
+                                @if(draft_check($employee->id,'id_card_photo'))
+                                <p style="color:red;"> Sent for Approval</p>
+                                @endif
+                                @error('id_card_photo')
+                                    <span class="text-danger">{{$message}}</span>
+                                @enderror
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="col-md-12 mb-1 bank-form" style="border-top:1px solid #ced4da">
                         <span class="card-title">Bank Details:</span>
                         <div class="row mt-3">
@@ -327,6 +446,33 @@
                                 </div>
                             </div>
 
+                            <div class="col-md-6">
+                                <div class="form-group row">
+                                    {{Form::label('cheque','Cancel Cheque/ Passbook', ['class' => 'col-sm-3 col-form-label']) }}
+                                    <div class="col-sm-9">
+                                        <div class="col-9 float-left">
+                                            @if(!empty($employee->documents->cheque))
+                                            {{Form::file('cheque',['accept'=>'pdf','disabled'=>draft_check($employee->id,'cheque')])}}
+                                            @else
+                                            {{Form::file('cheque',['accept'=>'pdf','disabled'=>draft_check($employee->id,'cheque')])}}
+                                            @endif
+                                        </div>
+                                        @if (!empty($employee->documents->cheque))
+                                        <div class="col-3 float-right text-right">
+                                            <a target="_blank" href="{{route('downloadDocument', ['employee' => $employee->id, 'reference' => $employee->documents->cheque])}}">
+                                                <i class="fa fa-eye text-primary"></i>
+                                            </a>
+                                        </div>
+                                        @endif
+                                        @if(draft_check($employee->id,'cheque'))
+                                        <p style="color:red;"> Sent for Approval</p>
+                                        @endif
+                                        @error('cheque')
+                                            <span class="text-danger">{{$message}}</span>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -416,3 +562,33 @@
 
 
 @endsection
+
+@section('footerScripts')
+<script src="{{ url('js/scanner.js') }}"></script>
+<script>
+    var url = "{{ route('assignEquipments') }}";
+
+    $(document).scannerDetection({
+        timeBeforeScanTest: 200, // wait for the next character for upto 200ms
+        avgTimeByChar: 40, // it's not a barcode if a character takes longer than 100ms
+        preventDefault: true
+        , endChar: [13]
+        , onComplete: function(barcode, qty) {
+            validScan = true;
+
+            window.open(url+"?id="+barcode,'_blank');
+
+        }
+        , onError: function(string, qty) {
+
+            res = string.split("-");
+            var inward_id = res[0];
+            var per_id = res[2];
+        }
+    });
+
+ 
+
+</script>
+@endsection
+

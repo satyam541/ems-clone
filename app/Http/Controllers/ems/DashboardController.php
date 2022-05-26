@@ -2,24 +2,27 @@
 
 namespace App\Http\Controllers\ems;
 
-use App\Http\Controllers\Controller;
 use App\User;
-use App\Models\Employee;
-use App\Models\Attendance;
 use Carbon\Carbon;
-use App\Models\Department;
-use App\Models\Interviewee;
 use App\Models\Leave;
-use App\Models\ActivityLog;
 use App\Models\Entity;
-use App\Models\EquipmentRequests;
-use App\Models\Equipment;
 use App\Models\Ticket;
+use App\Models\Employee;
+use App\Models\Equipment;
+use App\Models\Attendance;
+use App\Models\Department;
+use App\Models\ActivityLog;
+use App\Models\Interviewee;
+use App\Models\EquipmentRequests;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
+
 class DashboardController extends Controller
 {
 
   public function index()
   {
+
 
     $data = [];
     $user                 =   auth()->user();
@@ -56,13 +59,30 @@ class DashboardController extends Controller
     $data['start'] = Carbon::now()->startOfMonth()->format('Y-m-d');
     $data['end']   = Carbon::now()->endOfMonth()->format('Y-m-d');
 
+    $today                      = Carbon::now()->format('Y-m-d');
 
+    $data['todayAttendance']    = Attendance::where('user_id', auth()->user()->id)->where('punch_date',$today)->first();
+
+    $tickets                    = Ticket::with('user','ticketCategory')->whereNotIn('status',['Sorted','Closed'])->
+                                whereHas('ticketCategory',function($ticketCategory)
+                                {
+                                    $ticketCategory->where('type','IT');
+                                })->
+                                  whereHas('user.employee',function($departments)
+                                  {
+                                      $departments->where('department_id',auth()->user()->employee->department_id);
+                                  });
+                      
+                                  
+    $data['departmentTicketCount']  = $tickets->count();
     return view('dashboard', $data);
   }
 
   public function hrDashboard()
   {
-    $employees                       =    Employee::all();
+    $employees                       =    Employee::withoutGlobalScopes(['guest'])->whereHas('user',function ($user){
+        $user->where('user_type','Employee');
+    })->where('onboard_status','Onboard')->get();
     $active                          =    $employees->where('is_active','1')->count();
     $data['profilesPendingCount']    =    Employee::whereDoesntHave('documents')
                                                     ->orWhereHas('documents',function($query){
@@ -101,7 +121,7 @@ class DashboardController extends Controller
     // $department_attendance          =   Attendance::whereHas('employee.department', function ($query) use ($department_id) {
     //                                                   $query->where('id', $department_id);
     //                                                 })->where('attendance_date', Carbon::today())->get();
-    $data['employees']              =   Employee::where('department_id', $department_id)
+    $data['employees']              =   Employee::where('onboard_status','Onboard')->where('department_id', $department_id)
                                                   ->orderBy('created_at', 'desc')
                                                   ->pluck('name', 'id')->toArray();
     $data['employeeCount']          =   count($data['employees']);
@@ -111,21 +131,23 @@ class DashboardController extends Controller
 
   public function  employeeDashboard()
   {
-    $employee                       =   auth()->user()->employee;
-    $data['previous_month']         =   Carbon::now()->subMonth()->format('F');
-    $attendance_record              =   Attendance::where("employee_id", $employee->id)->whereYear("attendance_date", Carbon::now()->year)->get();
-    // $data['todayAttendance']     =   $attendance_record->where('attendance_date', Carbon::today())->pluck('status')->first();
-    $data['present']                =   $employee->total_present;
-    $data['absent']                 =   $employee->total_absent;
-    $this_year_attendance           =   [];
-    for ($i = 1; $i <= Carbon::now()->subMonth()->month; $i++) {
-      // db query in loop use collection instead
-      $this_year_attendance[$i]['count'] = $attendance_record->where('attendance_month', $i)->count();
-      $this_year_attendance[$i]['month'] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    }
-    $data['attendanceYearWise']     =  $this_year_attendance;
-    $data['equipment']              =  Equipment::where('employee_id', $employee->id)->count();
-    $data['ticketCount']            =  $employee->tickets->whereNotIn('status',['Sorted','Closed'])->count();
+    $user                       =   auth()->user();
+
+
+    // $data['previous_month']         =   Carbon::now()->subMonth()->format('F');
+    // // $attendance_record              =   Attendance::where("employee_id", $employee->id)->whereYear("attendance_date", Carbon::now()->year)->get();
+    // // // $data['todayAttendance']     =   $attendance_record->where('attendance_date', Carbon::today())->pluck('status')->first();
+    // // $data['present']                =   $employee->total_present;
+    // // $data['absent']                 =   $employee->total_absent;
+    // $this_year_attendance           =   [];
+    // for ($i = 1; $i <= Carbon::now()->subMonth()->month; $i++) {
+    //     // db query in loop use collection instead
+    //     $this_year_attendance[$i]['count'] = $attendance_record->where('attendance_month', $i)->count();
+    //     $this_year_attendance[$i]['month'] = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    // }
+    $data['attendanceYearWise']     =  [];
+    // $data['equipment']              =  Equipment::where('employee_id', $employee->id)->count();
+    $data['ticketCount']            =  $user->tickets->whereNotIn('status', ['Sorted', 'Closed'])->count();
     return $data;
 
   }
@@ -138,12 +160,20 @@ class DashboardController extends Controller
     $data['emailAssign']                   =   $users->sortByDesc('created_at')->take(5);
     $data['emailUpdate']                   =   $users->sortByDesc('updated_at')->take(5);
     $data['entityRequestCount']            =   EquipmentRequests::where('employee_id', auth()->user()->employee->id)->count();
-    $ticketCount                           =   Ticket::whereNotIn('status',['Sorted','Closed']);
-    if(!auth()->user()->hasRole('admin') && !auth()->user()->hasRole('guest'))
+    $ticketCount                           =   Ticket::whereNotIn('status',['Sorted','Closed'])->whereHas('user',function($query){
+        $query->where('is_active','1');
+    });
+    if(!auth()->user()->hasRole('admin') && !auth()->user()->hasRole('guest') && !auth()->user()->hasRole('HR'))
     {
     $ticketCount                           =   $ticketCount->whereHas('ticketCategory',function($query){
                                                 $query->where('type','IT');
                                                });
+    }
+    else
+    {
+        $ticketCount                           =   $ticketCount->whereHas('ticketCategory',function($query){
+            $query->where('type','HR');
+           });
     }
     $data['ticketCount']                   =  $ticketCount->count();
     return $data;
@@ -153,24 +183,30 @@ class DashboardController extends Controller
   {
     $today_date         = Carbon::now()->format('Y-m-d');
 
-    $data['leaves']     = Leave::with('employee.department')->leftjoin("employee","employee.id","=","leave.employee_id")->leftjoin("departments","departments.id","=","employee.department_id")
+    $data['leaves']     = Leave::with('user.employee.department')->leftjoin("users","users.id","=","leaves.user_id")->leftjoin("employee","employee.user_id","=","users.id")->leftjoin("departments","departments.id","=","employee.department_id")
                                 ->orderBy('departments.name')->whereDate('from_date', '<=', $today_date)
-                                ->whereDate('to_date', '>=', $today_date)->where('status', 'Approved')->get();
+                                ->whereDate('to_date', '>=', $today_date)->where('status','<>','Cancelled')->where('is_approved', '1')->get();
 // dd($data);
     return $data;
   }
 
   public function myLeaveDashboard()
   {
-    $leaves   = Leave::with('employee')->where('employee_id',auth()->user()->employee->id)
-                      ->whereYear('from_date','>=',Carbon::now()->year)->whereMonth('from_date','>=', Carbon::now()->month)
-                      ->where('status', 'Approved')->get();
+
+     if(empty(auth()->user()))
+     {
+
+        return [];
+     }
+    $leaves   = Leave::with('user.employee')->where('user_id',auth()->user()->id)
+                      ->whereYear('from_date',Carbon::now()->year)->whereMonth('from_date', Carbon::now()->month)
+                      ->where('is_approved', '1')->get();
                     //   dd($leaves);
     $fulldurationCount    = 0;
     $halfdaydurationCount = 0;
     foreach($leaves as $leave)
     {
-        if($leave->leave_type != 'Full day')
+        if($leave->leave_session != 'Full day')
         {
             $halfdaydurationCount+=$leave->duration;
         }
@@ -184,9 +220,4 @@ class DashboardController extends Controller
     $data['totalleaves']    = $fulldurationCount+$halfdaydurationCount;
     return $data;
   }
-
-
-
-
 }
-

@@ -22,12 +22,12 @@ class ManagerController extends Controller
 
         if(empty($department_ids))
         {
-            $department_names   = auth()->user()->employee->department->name;
-            $employees          = $employees->where('department_id',auth()->user()->employee->department_id);
+            $department_names       = auth()->user()->employee->department->name;
+            $employees              = $employees->where('department_id',auth()->user()->employee->department_id);
         }
         else{
-            $department_names   = implode(", ",array_keys($department_ids));
-            $employees          = $employees->whereIn('department_id',$department_ids);
+            $department_names       = implode(", ",array_keys($department_ids));
+            $employees              = $employees->whereIn('department_id',$department_ids);
         }
         $data['employees']          = $employees->get();
         $data['department_names']   = $department_names;
@@ -89,13 +89,9 @@ class ManagerController extends Controller
         $entity                     =   Entity::all()->pluck('name','name')->toArray();
         $manufacturer               =   Equipment::all()->pluck('manufacturer','manufacturer')->unique()->toArray();
         $new['All']                 =   'All';
-        // $employees                   =   Employee::all()->pluck('name','id');
         $entity                     =   array_merge($new,$entity);
         $department                 =   auth()->user()->employee->department;
         $employees                  =   $department->employees->pluck('name','id')->toArray(); 
-        // $manager                    =   Role::with('users')->where('name','Manager')->pluck('name','id')->toArray();
-        // $manager                    =   array_merge(['0'=>'All'],$manager);
-        // $data['manager']            =   json_encode($manager,JSON_HEX_APOS);
         $manufacturer               =   array_merge($new,$manufacturer);
         $data['entity']             =   json_encode($entity,JSON_HEX_APOS);
         $data['manufacturer']       =   json_encode($manufacturer,JSON_HEX_APOS);

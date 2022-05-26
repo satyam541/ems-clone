@@ -8,15 +8,25 @@ class TicketLog extends Model
 {
     protected $table='ticket_logs';
     
+    // public function actionBy()
+    // {
+    //     return $this->belongsTo('App\Models\Employee','action_by','id')->withoutGlobalScope('guest');
+    // }
+
+    // public function assignedTo()
+    // {
+    //     return $this->belongsTo('App\Models\Employee','assigned_to','id');
+    // }
     public function actionBy()
     {
-        return $this->belongsTo('App\Models\Employee','action_by','id')->withoutGlobalScope('guest');
+        return $this->belongsTo('App\User','action_by','id');
     }
 
     public function assignedTo()
     {
-        return $this->belongsTo('App\Models\Employee','assigned_to','id');
+        return $this->belongsTo('App\User','assigned_to','id');
     }
+
     public function ticket()
     {
         return $this->belongsTo('App\Models\TIcket');

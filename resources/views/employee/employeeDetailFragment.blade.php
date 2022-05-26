@@ -16,7 +16,7 @@
                 <td><a target="_blank" href="{{ $employee->image_source }}"><img
                     src="{{ $employee->image_source }}" width="42" height="42"></a></td>
                 <td>{{ $employee->name }}</td>
-                <td>{{$employee->department->name}}</td>
+                <td>{{$employee->department->name ?? 'N/A'}}</td>
                 <td>{{ getFormatedDate($employee->join_date) }}</td>
                 
                 <td><a target="_blank" href="{{ route('employeeDetail', ['employee' => $employee->id]) }}"

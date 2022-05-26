@@ -24,7 +24,7 @@ class TicketRequest extends FormRequest
     public function rules()
     {
         $rules = [
-            'department'       =>     'required',
+            'department'       =>     'sometimes|required',
             'category'          =>     'required',
             'subject'           =>     'required',
             'description'       =>     'required',  

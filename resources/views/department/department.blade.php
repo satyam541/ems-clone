@@ -30,10 +30,16 @@
                 title:"name",
                 name: "name",
                 type:"text",
-                width:300
+                width:200
                
             },
+            {
+                title:"Short Name",
+                name: "short_name",
+                type:"text",
+                width:200
                
+            },   
             {
                 title:"description",
                 name: "description",

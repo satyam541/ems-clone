@@ -289,4 +289,68 @@ class AuthorizeController extends Controller
         return 'destroyed';
     }
 
+    public function assignRoles()
+    {
+        $this->authorize('view', new Role());
+        $data['users']  = User::with('roles')->where('is_active', 1)->pluck('name','id')->toArray();
+
+        return view('role.assignRole',$data);
+    }
+
+    public function createRole(Request $request)
+    {
+        $this->authorize('view', new Role());
+        $data['userRoles']  = User::with('roles')->find($request->id)->roles->pluck('name', 'name')->toArray();
+        $data['roles']      = Role::pluck('name','id')->toArray();
+
+        return $data;
+    }
+
+    public function storeRole(Request $request)
+    {
+        $this->authorize('view', new Role());
+        
+        $user   = User::find($request->user);
+        $roles  = $request->input('roles');
+
+        if(empty($roles))
+        {
+            $roles = array();
+        }
+        $user->roles()->sync($roles);
+        
+        return back()->with('success', 'Role Assigned Successfully.');
+    }
+
+    public function bulkAssignRole()
+    {
+        $this->authorize('view', new Role());
+        $data['users']  = User::with('roles')->where('is_active', 1)->pluck('name','id')->toArray();
+        $data['roles']  = Role::all();
+
+        return view('role.bulkAssign',$data);
+    }
+
+    public function bulkStore(Request $request)
+    {
+        $this->authorize('view', new Role());
+        $users      =       User::with('roles')->find($request->user);
+        $roles      =       $request->input('role');
+        $name       =       array();
+
+        if(empty($roles))
+        {
+            $roles  =       array();
+        }
+
+        foreach($users as $user)
+        {
+            $name    =      $user->roles->pluck('id','id')->toArray();
+            $assign  =      array_merge($name,$roles);
+            $user->roles()->sync($assign);
+        }
+        
+        return back()->with('success', 'Role Assigned Successfully.');
+    }
+
 } 

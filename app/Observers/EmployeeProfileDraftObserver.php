@@ -8,7 +8,7 @@ class EmployeeProfileDraftObserver
     
     public function created(EmployeeProfileDraft $employeeDraft)
     {
-        $action = $employeeDraft->employee->field_name." added  by ".$employeeDraft->employee->name;
+        $action = $employeeDraft->field_name." added  by ".$employeeDraft->employee->name;
         saveLogs( $action,$employeeDraft->employee);
     }
 
@@ -20,7 +20,7 @@ class EmployeeProfileDraftObserver
      */
     public function updated(EmployeeProfileDraft $employeeDraft)
     {
-        $action =  $employeeDraft->employee->field_name." updated  by ".$employeeDraft->employee->name;
+        $action =  $employeeDraft->field_name." updated  by ".$employeeDraft->employee->name;
         saveLogs( $action,$employeeDraft->employee);
     }
 

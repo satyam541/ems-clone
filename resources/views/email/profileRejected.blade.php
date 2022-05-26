@@ -35,10 +35,10 @@
     <div class="wrap">
     <label class="name">Profile Rejected </label>
      <br><br>
-    <div class="status">Your  {{$field_name}}  has been rejected and Update again</div>
-    @if(!empty($remarks))
+    <div class="status">Your  {{$data['field_name']}}  has been rejected and Update again</div>
+    @if(!empty($data['remarks']))
     <br>
-    <div class="status">Remarks:{{$remarks}}</div>
+    <div class="status">Remarks:{{$data['remarks']}}</div>
     @endif
     </div>
     <hr>

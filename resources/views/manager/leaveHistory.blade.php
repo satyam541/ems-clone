@@ -44,8 +44,8 @@
 
                                     <thead>
                                         <tr>
-                                            <th>Nature</th>
                                             <th>Type</th>
+                                            <th>Session</th>
                                             <th>Name</th>
                                             @if($departmentCount)
                                             <th>Department</th>
@@ -64,11 +64,11 @@
                                     <tbody>
                                         @foreach ($leaves as $leave)
                                             <tr class="border-top">
-                                                <td>{{$leave->leave_nature}}</td>
-                                                <td>{{$leave->leave_type}}</td>
-                                                <td>{{$leave->employee->name}}</td>
+                                                <td>{{$leave->leaveType->name}}</td>
+                                                <td>{{$leave->leave_session}}</td>
+                                                <td>{{optional($leave->user)->name}}</td>
                                                 @if($departmentCount)
-                                                <td>{{$leave->employee->department->name}}</td>
+                                                <td>{{optional($leave->user->employee)->department->name ?? ""}}</td>
                                                 @endif
                                                 <td>{{getFormatedDate($leave->from_date)}}</td>
                                                 <td>{{getFormatedDate($leave->to_date)}}</td>

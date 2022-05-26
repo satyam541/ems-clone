@@ -21,8 +21,14 @@ use Illuminate\Support\Facades\Route;
     \Debugbar::disable();
 
 
+    // Route::get('/test','TestController@index');
+
+    Route::group(['middleware'=>['auth']],function() {
     Route::get('/', 'DashboardController@index')->name('dashboard');
     Route::get('/dashboard', 'DashboardController@index');
+    Route::get('/test', 'TestController@ticketUpdate');
+    Route::get('/test/image', 'TestController@image');
+    Route::get('get/barcode', 'EmployeeController@getBarCodeImage')->name('barCodeImage');
 
     // user Routes
     Route::prefix('user')->group(function () {
@@ -49,9 +55,11 @@ use Illuminate\Support\Facades\Route;
     Route::get('/department-view','DepartmentController@view')->name('departmentView');
 
     Route::resource('/designation', 'DesignationController');
-    
+
     //qualification route
     Route::get('/qualification','QualificationController@view')->name('qualificationView');
+
+    Route::resource('shift-type', 'ShiftTypeController');
 
     // hr routes
     Route::group(['prefix'=>'hr','as'=>'hr.'], function(){
@@ -82,18 +90,42 @@ use Illuminate\Support\Facades\Route;
         Route::post('/upload/experience', 'EmployeeController@uploadExperience')->name('uploadExperience');
         Route::get('/forwarded/leaves','LeaveController@hrLeaveList')->name('forwardedLeaveList');
         Route::get('/leaves','LeaveController@managerLeave')->name('hrLeaveList');
+        Route::post('bulk/leave/action','LeaveController@bulkLeaveAction')->name('bulkLeaveAction');
         Route::get('/detailed/leaves-history','LeaveController@hrLeaveHistoryList')->name('hrLeaveHistory');
         Route::get('/export','LeaveController@export')->name('exportLeave');
+        Route::get('/leave/balance','LeaveBalanceController@dashboard')->name('leaveBalanceDashboard');
+        Route::get('/performance/dashboard','PerformanceDashboardController@dashboard')->name('performanceDashboard');
+        Route::get('/balance/edit/{id}','LeaveBalanceController@edit')->name('leaveBalanceEdit');
+        Route::post('/balance/update/{id}','LeaveBalanceController@update')->name('leaveBalanceUpdate');
+        Route::get('/balance/export','LeaveBalanceController@export')->name('leaveBalanceExport');
     });
+    Route::resource('manual-leave', ManualLeaveController::class);
     //employee routes
     Route::prefix('employee')->group(function () {
+        Route::get('barcode/display', 'EmployeeController@barcode')->name('displayBarcode');
+        Route::get('/onboard/dashboard','EmployeeController@onboardDashboard')->name('onboardDashboard');
+        Route::get('/load/dashboard','EmployeeController@onboardDashboard')->name('loadEmployees');
+        Route::get('/onboard/status/update/form','EmployeeController@onboardStatusUpdateForm')->name('onboardStatusUpdateForm');
+        Route::post('/onboard/status/update','EmployeeController@onboardStatusUpdate')->name('onboardStatusUpdate');
+        Route::get('send/document/link','EmployeeController@sendDocumentLink')->name('sendDocumentLink');
+        Route::get('send/document/reminder','EmployeeController@sendDocumentReminder')->name('sendDocumentReminder');
+        Route::get('/onboard/form','EmployeeController@onboardForm')->name('onboardForm');
+        Route::post('/onboard/submit','EmployeeController@onboardSubmit')->name('onboardSubmit');
         Route::get('/view','DepartmentController@employee')->name('departmentEmployeeView');
         Route::get('/profile/{employee}','EmployeeController@detail')->name('employeeDetail');
         Route::get('/export','EmployeeController@export')->name('exportEmployee');
         Route::post('/import','EmployeeController@import')->name('importEmployee');
         Route::get('/no-dues/requests','EmployeeController@noDuesRequests')->name('noDuesRequests');
         Route::post('/no-dues/submit/{employee}','EmployeeController@noDuesSubmit')->name('noDuesSubmit');
+        Route::get('/my/balance','LeaveBalanceController@myBalance')->name('myBalance');
+        //employee pre details
+        Route::resource('/predetails','EmployeePreDetailsController');
+        // Route::get('download/documents','EmployeePreDetailsController@download')->name('downloadPreDetailsDocument');
 
+        // document download
+        Route::get('common/download/documents','DashboardController@download')->name('downloadCommonDocument');
+        Route::get('/dashboard','EmployeeDashboardController@index')->name('employeeDashboard');
+        Route::get('manager/dashboard','EmployeeDashboardController@managerEmployeeDashboard')->name('employeeManagerDashboard');
         //edit routes
         Route::prefix('edit')->group(function () {
             Route::get('/profile/{employee}','EmployeeController@editProfile')->name('editProfile');
@@ -101,6 +133,8 @@ use Illuminate\Support\Facades\Route;
             Route::get('/document/{document}','EmployeeController@editDocument')->name('editDocument');
             Route::post('/document','EmployeeController@updateDocument')->name('updateDocument');
         });
+        //delete document
+        Route::get('document/delete/{employee_id}/{reference}','EmployeeController@deleteEmployeeDocument')->name('deleteEmployeeDocument');
     });
 
     // Ticket form
@@ -125,6 +159,9 @@ use Illuminate\Support\Facades\Route;
     Route::post('hr/leave-history/cancel','LeaveController@hrLeaveHistoryCancel')->name('hrLeaveHistoryCancel');
     //Attendance Routes
     Route::prefix('attendance')->group(function () {
+
+        Route::get('/dashboard','LiveAttendanceController@attendanceDashboard')->name('attendanceDashboard');
+        Route::get('/late/dashboard','LiveAttendanceController@lateAttendanceDashboard')->name('lateAttendanceDashboard');
         // Route::get('/','AttendanceController@index')->name('attendanceUpload');
         // Route::post('/import','AttendanceController@import')->name('importAttendance');
         // Route::get('/view/{employee}','EmployeeController@employeeAttendance')->name('employeeAttendance');
@@ -146,18 +183,18 @@ use Illuminate\Support\Facades\Route;
     Route::get('alloted/office/email','EmployeeController@officeEmailAlloted')->name('AllotedOfficeEmail');
 
     //job application form
-    Route::prefix('interviewee')->group(function () {
-        Route::get('/','IntervieweeController@viewInterviewee')->name('intervieweeView');
-        Route::get('/list','IntervieweeController@list')->name('intervieweeList');
-        Route::get('/response/saved',function(){
-            return view('error.responseSaved');
-        })->name('errorResponse');
-        Route::get('/detail/{interviewee}','IntervieweeController@detail')->name('intervieweeDetail');
-        Route::delete('/delete/{interviewee}','IntervieweeController@delete')->name('intervieweeDelete');
-        Route::get('/download/{resume}','IntervieweeController@downloadResume')->name('downloadResume');
-        Route::post('/update/detail','IntervieweeController@updateInterviewee')->name('updateInterviewee');
-        Route::get('/pending/list','IntervieweeController@pendingList')->name('intervieweePending');
-    });
+    // Route::prefix('interviewee')->group(function () {
+    //     Route::get('/','IntervieweeController@viewInterviewee')->name('intervieweeView');
+    //     Route::get('/list','IntervieweeController@list')->name('intervieweeList');
+    //     Route::get('/response/saved',function(){
+    //         return view('error.responseSaved');
+    //     })->name('errorResponse');
+    //     Route::get('/detail/{interviewee}','IntervieweeController@detail')->name('intervieweeDetail');
+    //     Route::delete('/delete/{interviewee}','IntervieweeController@delete')->name('intervieweeDelete');
+    //     Route::get('/download/{resume}','IntervieweeController@downloadResume')->name('downloadResume');
+    //     Route::post('/update/detail','IntervieweeController@updateInterviewee')->name('updateInterviewee');
+    //     Route::get('/pending/list','IntervieweeController@pendingList')->name('intervieweePending');
+    // });
 
     // Offer Letter
     Route::get('download/offer/letter/{offer_letter}','IntervieweeController@downloadOfferLetter')->name('downloadOfferLetter');
@@ -219,19 +256,6 @@ use Illuminate\Support\Facades\Route;
         Route::get('employee/view','EmployeeController@viewTrash')->name('viewTrashEmployee');
         Route::get('module/view','ModuleController@viewTrash')->name('viewTrashModule');
     });
-    Route::get('/clear-cache',function()
-    {
-        if(in_array(strtolower(auth()->user()->email), User::$developers))
-        {
-            \Artisan::call('cache:clear');
-            \Artisan::call('config:clear');
-            \Artisan::call('view:clear');
-            echo "cleared";
-        }
-        else{
-            abort(404);
-        }
-    });
 
 
 
@@ -281,6 +305,18 @@ use Illuminate\Support\Facades\Route;
         Route::get('/export','DailyReportsController@export')->name('exportDailyReport');
     });
 
+    // Asset Routes
+    Route::resource('asset', 'AssetController');
+    Route::get('get/types','AssetController@getTypes')->name('getTypes');
+    Route::get('get/sub/types','AssetController@getSubTypes')->name('getSubTypes');
+    Route::resource('asset-category' ,'AssetCategoryController');
+    Route::resource('asset-type',    'AssetTypeController');
+    Route::get('user/asset/assignments','AssetController@assignEquipments')->name('assignEquipments');
+    Route::get('user/asset/assignments/list','AssetController@assignmentList')->name('assignmentList');
+    Route::get('user/assign/asset','AssetController@assignAsset')->name('assetAssign');
+    Route::resource('asset-subtype','AssetSubTypeController');
+    Route::get('dashboard/asset',    'AssetController@dashboard')->name('assetDashboard');
+
     Route::get('raised/ticket-list','TicketController@itRaiseTicket')->name('itRaiseTicket');
     Route::post('raised/ticket/action','TicketController@raiseTicketAction')->name('raiseTicketAction');
     Route::get('ticket-history','TicketController@ticketHistory')->name('ticketHistory');
@@ -296,3 +332,62 @@ Route::get('/switch/user/back','UserController@switchUserLogout')->name('swithLo
 Route::get('/recent/joined/employees','EmployeeController@showRecentJoinedUser')->name('recent-joined');
 // Route::get('/show/employee/{user}','UserController@detailUser')->name('detailUser');
 
+Route::get('/send/mail','DailyReportsController@send')->name('sendReportMail');
+
+//Interview
+Route::resource('/interview',    'InterviewController');
+});
+Route::get('/clear-cache',function()
+{
+    if(in_array(strtolower(auth()->user()->email), User::$developers))
+    {
+        \Artisan::call('cache:clear');
+        \Artisan::call('config:clear');
+        \Artisan::call('view:clear');
+        echo "cleared";
+    }
+    else{
+        abort(404);
+    }
+});
+Route::get('attendance/store','LiveAttendanceController@storeAttendance');
+Route::get('attendance/excel','LiveAttendanceController@attendanceExport')->name('attendanceExport');
+
+
+Route::get('employee/attendance','LiveAttendanceController@myAttendance')->name('myAttendance');
+//Assign the role
+Route::get('assign/role','AuthorizeController@assignRoles')->name('assignRoles');
+Route::get('create/role','AuthorizeController@createRole')->name('createRole');
+Route::post('store/role','AuthorizeController@storeRole')->name('storeRole');
+
+//Asset detail controllers
+Route::resource('asset-detail','AssetDetailController');
+
+//Leave Type
+Route::resource('leave-type','LeaveTypeController');
+
+//Manual Attendance
+Route::resource('manual-attendance','ManualAttendanceController');
+
+//Badges
+Route::resource('badge','BadgeController');
+Route::get('/download/{reference}','BadgeController@download_image')->name('downloadImage');
+
+//Announcement
+Route::resource('announcement','AnnouncementController');
+Route::get('/announcement/{reference}','AnnouncementController@downloadAnnouncement')->name('downloadAnnouncement');
+
+// Barcode List
+Route::get('/barcodeList','EmployeeController@barcodeList')->name('barcodeList');
+Route::post('/store-id','EmployeeController@storeIdCard')->name('uploadIdCard');
+
+//testing
+Route::get('/testing','TestController@ticketUpdate');
+Route::get('/ticket','TestController@copyId');
+
+// Power User Department tickets
+Route::get('/department-ticket','TicketController@departmentTickets')->name('departmentTickets');
+
+// Bulk Assign
+Route::get('bulk-assign/role','AuthorizeController@bulkAssignRole')->name('bulkAssignRole');
+Route::post('bulk-store/role','AuthorizeController@bulkStore')->name('bulkStore');

@@ -35,8 +35,13 @@
                                     <tbody>
                                         @foreach ($assignedTickets as $assignedTicket)
                                             <tr>
+                                             
                                                 <td>{{$assignedTicket->id}}</td>
-                                                <td>{{$assignedTicket->employee->name.' ('.$assignedTicket->employee->department->name.')'}}</td>
+                                                @if(!empty($assignedTicket->user))
+                                                <td>{{$assignedTicket->user->name ?? "".' ('.$assignedTicket->user->employee->department->name ?? "".')'}}</td>
+                                                @else
+                                                <td></td>
+                                                @endif
                                                 <td>{{ucfirst($assignedTicket->ticketCategory->type)}}</td>
                                                 <td>{{ucfirst($assignedTicket->ticketCategory->name)}}</td>
                                                 <td>{{$assignedTicket->subject}}</td>

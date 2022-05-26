@@ -27,7 +27,17 @@ class AuthServiceProvider extends ServiceProvider
         'App\Models\Equipment'          => 'App\Policies\EquipmentPolicy',
         'App\Models\Ticket'             => 'App\Policies\TicketPolicy',
         'App\Models\Stock'              => 'App\Policies\StockPolicy',
-        'App\Models\RemoteAttendance'   => 'App\Policies\RemoteAttendancePolicy'
+        'App\Models\RemoteAttendance'   => 'App\Policies\RemoteAttendancePolicy',
+        'App\Models\Asset'              => 'App\Policies\AssetPolicy',
+        'App\Models\AssetCategory'      => 'App\Policies\AssetCategoryPolicy',
+        'App\Models\AssetDetails'       => 'App\Policies\AssetDetailsPolicy',
+        'App\Models\AssetSubType'       => 'App\Policies\AssetSubTypePolicy',
+        'App\Models\AssetType'          => 'App\Policies\AssetTypePolicy',
+        'App\Models\Interview'          => 'App\Policies\InterviewPolicy',
+        'App\Models\LeaveType'          => 'App\Policies\LeaveTypePolicy',
+        'App\Models\Attendance'         => 'App\Policies\AttendancePolicy',
+        'App\Models\Badge'              => 'App\Policies\BadgePolicy',
+        'App\Models\Announcement'              => 'App\Policies\AnnouncementPolicy',
         ];
 
     /**

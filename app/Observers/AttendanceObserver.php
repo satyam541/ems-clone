@@ -14,8 +14,8 @@ class AttendanceObserver
      */
     public function created(Attendance $attendance)
     {
-        $action = "Attendance Created: ".$attendance->employee->name;
-        saveLogs($action,$attendance);
+        // $action = "Attendance Created: ".$attendance->employee->name;
+        // saveLogs($action,$attendance);
     }
 
     /**
@@ -26,8 +26,8 @@ class AttendanceObserver
      */
     public function updated(Attendance $attendance)
     {
-        $action = "Attendance Updated: ".$attendance->employee->name;
-        saveLogs($action,$attendance);
+        // $action = "Attendance Updated: ".$attendance->employee->name;
+        // saveLogs($action,$attendance);
      
     }
 
